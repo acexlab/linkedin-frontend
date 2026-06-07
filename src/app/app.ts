@@ -1,12 +1,36 @@
-import { Component, signal } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Component, inject, computed, effect } from '@angular/core';
+import { RouterOutlet, Router } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { NavbarComponent } from './components/navbar/navbar.component';
+import { MiniMessagingComponent } from './components/mini-messaging/mini-messaging.component';
+import { StateService } from './services/state.service';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  standalone: true,
+  imports: [CommonModule, RouterOutlet, NavbarComponent, MiniMessagingComponent],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
 export class App {
-  protected readonly title = signal('frontend');
+  private readonly stateService = inject(StateService);
+  private readonly router = inject(Router);
+
+  readonly currentUser = this.stateService.currentUser;
+
+  constructor() {
+    effect(() => {
+      const user = this.currentUser();
+      if (user) {
+        const url = this.router.url;
+        if (user.role === 'admin' && !url.startsWith('/admin')) {
+          this.router.navigate(['/admin']);
+        } else if (user.role === 'business' && !url.startsWith('/business')) {
+          this.router.navigate(['/business']);
+        } else if (user.role === 'candidate' && (url.startsWith('/admin') || url.startsWith('/business'))) {
+          this.router.navigate(['/']);
+        }
+      }
+    }, { allowSignalWrites: true });
+  }
 }

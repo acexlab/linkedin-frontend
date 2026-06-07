@@ -1,1 +1,86 @@
-/* You can add global styles to this file, and also import other style files */
+@import "tailwindcss";
+
+:root {
+  --button-outline: rgba(0,0,0, .10);
+  --badge-outline: rgba(0,0,0, .05);
+  --opaque-button-border-intensity: -8;
+  --elevate-1: rgba(0,0,0, .03);
+  --elevate-2: rgba(0,0,0, .08);
+
+  --background: 240 10% 94%; /* #F3F2EF */
+  --foreground: 0 0% 10%; /* #000000E0 */
+  --border: 45 6% 87%; /* #E0DFDC */
+  
+  --card: 0 0% 100%;
+  --card-foreground: 0 0% 10%;
+  --card-border: 45 6% 87%;
+
+  --sidebar: 0 0% 100%;
+  --sidebar-foreground: 0 0% 10%;
+  --sidebar-border: 45 6% 87%;
+  --sidebar-primary: 211 90% 40%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 60 11% 95%;
+  --sidebar-accent-foreground: 0 0% 10%;
+  --sidebar-ring: 211 90% 40%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 0 0% 10%;
+  --popover-border: 45 6% 87%;
+
+  --primary: 211 90% 40%; /* #0A66C2 */
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 0 0% 40%; /* #666666 */
+  --secondary-foreground: 0 0% 100%;
+
+  --muted: 60 11% 95%;
+  --muted-foreground: 0 0% 40%;
+
+  --accent: 60 11% 95%;
+  --accent-foreground: 0 0% 10%;
+
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+
+  --input: 45 6% 87%;
+  --ring: 211 90% 40%;
+
+  --app-font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --app-font-serif: Georgia, serif;
+  --app-font-mono: Menlo, monospace;
+  
+  --radius: 0.5rem; /* 8px */
+  
+  --shadow-sm: 0 0 0 1px rgba(0,0,0,0.08);
+  --shadow: 0 0 0 1px rgba(0,0,0,0.08), 0 2px 3px rgba(0,0,0,0.04);
+  --shadow-md: 0 0 0 1px rgba(0,0,0,0.08), 0 4px 6px rgba(0,0,0,0.04);
+}
+
+* {
+  border-color: #E0DFDC;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background-color: #F3F2EF;
+  color: rgba(0, 0, 0, 0.9);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom scrollbars matching LinkedIn.com */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
