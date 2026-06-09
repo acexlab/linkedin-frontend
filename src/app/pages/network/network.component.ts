@@ -285,7 +285,7 @@ import { User, Connection } from '../../services/state.types';
                         </div>
                       </div>
                       <button
-                        (click)="solveGame(game.title)"
+                        (click)="openGame(game.title)"
                         class="border text-[10px] font-semibold rounded-full px-3 py-1 transition-colors bg-white cursor-pointer"
                         [class.text-[#057642]]="isGameSolved(game.title)"
                         [class.border-[#057642]]="isGameSolved(game.title)"
@@ -846,6 +846,141 @@ import { User, Connection } from '../../services/state.types';
         </div>
       </div>
     }
+
+    <!-- INTERACTIVE GAME MODAL -->
+    @if (showGameModal()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-200" (click)="closeGameModal()">
+        <div class="bg-white rounded-xl border border-gray-200 shadow-2xl w-full max-w-[460px] p-6 relative overflow-hidden" (click)="$event.stopPropagation()">
+          <button (click)="closeGameModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 rounded-full p-1.5 hover:bg-gray-100 transition-colors focus:outline-none">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+
+          <div class="text-center pb-4 border-b border-gray-100 font-sans">
+            <h2 class="text-xl font-bold text-gray-900 flex items-center justify-center gap-2">
+              <span>{{ currentGame() }}</span>
+            </h2>
+            <p class="text-xs text-gray-500 mt-1">Wind down with a quick challenge</p>
+          </div>
+
+          <!-- SUDOKU GAME GRID -->
+          @if (currentGame().includes('Sudoku')) {
+            <div class="py-6 flex flex-col items-center">
+              <p class="text-xs text-gray-600 mb-4 text-center font-sans">Fill the grid so every row, column, and 2x2 box contains numbers 1-4. Click a cell to change its value.</p>
+              <div class="grid grid-cols-4 gap-2 w-64 h-64 bg-gray-100 p-2 rounded-lg border border-gray-300">
+                @for (row of [0, 1, 2, 3]; track row) {
+                  @for (col of [0, 1, 2, 3]; track col) {
+                    @let val = sudokuGrid()[row][col];
+                    @let isOriginal = isOriginalSudokuCell(row, col);
+                    <button
+                      (click)="cycleSudokuCell(row, col)"
+                      [disabled]="isOriginal"
+                      class="w-full h-full text-lg font-bold rounded flex items-center justify-center transition-all cursor-pointer select-none border border-gray-300 font-sans"
+                      [class.bg-white]="!isOriginal && val === 0"
+                      [class.bg-[#E8F0FE]]="isOriginal"
+                      [class.text-gray-800]="isOriginal"
+                      [class.bg-blue-50]="!isOriginal && val > 0"
+                      [class.text-[#0A66C2]]="!isOriginal && val > 0"
+                      [class.hover:bg-blue-100]="!isOriginal"
+                      [class.border-blue-300]="isOriginal"
+                    >
+                      {{ val > 0 ? val : '' }}
+                    </button>
+                  }
+                }
+              </div>
+
+              @if (gameStatus() === 'won') {
+                <div class="mt-6 text-center space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                  <span class="text-3xl">🎉</span>
+                  <p class="text-sm font-bold text-green-700 font-sans">Congratulations! Game Solved!</p>
+                  <p class="text-xs text-gray-500 font-sans">You completed Mini Sudoku #299 successfully!</p>
+                </div>
+              }
+            </div>
+          }
+
+          <!-- PATCHES GAME GRID -->
+          @if (currentGame().includes('Patches')) {
+            <div class="py-6 flex flex-col items-center">
+              <p class="text-xs text-gray-600 mb-4 text-center font-sans">Group the words into 2 categories of 4 related items. Click 4 words and they will be verified.</p>
+              
+              <div class="grid grid-cols-2 gap-2.5 w-full max-w-[380px]">
+                @for (w of patchesWords(); track w.text) {
+                  <button
+                    (click)="selectPatchesWord(w)"
+                    [disabled]="w.grouped"
+                    class="py-3 px-2 text-xs font-semibold rounded border text-center transition-all cursor-pointer font-sans"
+                    [class.bg-gray-100]="!w.selected && !w.grouped"
+                    [class.text-gray-800]="!w.selected && !w.grouped"
+                    [class.border-gray-300]="!w.selected && !w.grouped"
+                    [class.bg-blue-600]="w.selected && !w.grouped"
+                    [class.text-white]="w.selected && !w.grouped"
+                    [class.border-blue-700]="w.selected && !w.grouped"
+                    [class.bg-green-100]="w.grouped"
+                    [class.text-green-800]="w.grouped"
+                    [class.border-green-300]="w.grouped"
+                  >
+                    {{ w.text }}
+                  </button>
+                }
+              </div>
+
+              @if (gameStatus() === 'won') {
+                <div class="mt-6 text-center space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                  <span class="text-3xl">🎉</span>
+                  <p class="text-sm font-bold text-green-700 font-sans">Success! Categories Grouped!</p>
+                  <p class="text-xs text-gray-650 font-sans mt-2">
+                    💻 Tech: Angular, TypeScript, RxJS, Signal <br/>
+                    🌲 Nature: Forest, River, Mountain, Valley
+                  </p>
+                </div>
+              }
+            </div>
+          }
+
+          <!-- ZIP GAME GRID -->
+          @if (currentGame().includes('Zip')) {
+            <div class="py-6 flex flex-col items-center font-sans">
+              <p class="text-xs text-gray-600 mb-4 text-center">Click the numbers in sequential order from 1 to 8 as fast as you can to zip the path!</p>
+              
+              <div class="grid grid-cols-3 gap-3 w-64 h-64 bg-gray-50 p-2 rounded-lg border border-gray-200">
+                @for (item of zipNumbers(); track item.num) {
+                  <button
+                    (click)="clickZipNumber(item)"
+                    [disabled]="item.clicked"
+                    class="w-full h-full text-base font-bold rounded-lg border border-gray-300 transition-all cursor-pointer font-sans"
+                    [class.bg-white]="!item.clicked"
+                    [class.text-gray-800]="!item.clicked"
+                    [class.bg-green-600]="item.clicked"
+                    [class.text-white]="item.clicked"
+                    [class.border-green-700]="item.clicked"
+                    [class.hover:bg-gray-100]="!item.clicked"
+                  >
+                    {{ item.num }}
+                  </button>
+                }
+              </div>
+
+              @if (gameStatus() === 'won') {
+                <div class="mt-6 text-center space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                  <span class="text-3xl">⚡</span>
+                  <p class="text-sm font-bold text-green-700 font-sans">Zip path completed!</p>
+                  <p class="text-xs text-gray-500 font-sans">You successfully connected all points in order!</p>
+                </div>
+              } @else {
+                <p class="text-xs text-gray-500 font-sans mt-4">Next number to find: <span class="font-bold text-[#0A66C2] text-sm">{{ nextZipNum() }}</span></p>
+              }
+            </div>
+          }
+
+          <div class="mt-4 pt-4 border-t border-gray-100 flex justify-end">
+            <button (click)="closeGameModal()" class="bg-[#0A66C2] hover:bg-[#004182] text-white text-xs font-semibold px-5 py-2 rounded-full cursor-pointer border-0 font-sans">
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    }
   `
 })
 export class NetworkComponent {
@@ -871,6 +1006,33 @@ export class NetworkComponent {
 
   // Solved games tracker
   solvedGames = signal<string[]>([]);
+
+  // Games state signals
+  showGameModal = signal<boolean>(false);
+  currentGame = signal<string>('');
+  gameStatus = signal<'playing' | 'won'>('playing');
+  sudokuGrid = signal<number[][]>([[1, 0, 0, 4], [0, 4, 1, 0], [0, 1, 4, 0], [4, 0, 0, 1]]);
+  patchesWords = signal<{ text: string; category: string; selected: boolean; grouped: boolean }[]>([]);
+  zipNumbers = signal<{ num: number; clicked: boolean }[]>([]);
+  nextZipNum = signal<number>(1);
+
+  sudokuSolution = [
+    [1, 2, 3, 4],
+    [3, 4, 1, 2],
+    [2, 1, 4, 3],
+    [4, 3, 2, 1]
+  ];
+
+  initialPatchesWords = [
+    { text: 'Angular', category: 'Tech', selected: false, grouped: false },
+    { text: 'TypeScript', category: 'Tech', selected: false, grouped: false },
+    { text: 'RxJS', category: 'Tech', selected: false, grouped: false },
+    { text: 'Signal', category: 'Tech', selected: false, grouped: false },
+    { text: 'Forest', category: 'Nature', selected: false, grouped: false },
+    { text: 'River', category: 'Nature', selected: false, grouped: false },
+    { text: 'Mountain', category: 'Nature', selected: false, grouped: false },
+    { text: 'Valley', category: 'Nature', selected: false, grouped: false }
+  ];
 
   // Carousel slider indices
   gameIndex = signal(0);
@@ -1111,5 +1273,129 @@ export class NetworkComponent {
     this.newEventDate = '';
     this.newEventDesc = '';
     this.showCreateEventModal.set(false);
+  }
+
+  // Games methods
+  isOriginalSudokuCell(row: number, col: number): boolean {
+    const originalMask = [
+      [true, false, false, true],
+      [false, true, true, false],
+      [false, true, true, false],
+      [true, false, false, true]
+    ];
+    return originalMask[row][col];
+  }
+
+  cycleSudokuCell(row: number, col: number) {
+    if (this.isOriginalSudokuCell(row, col) || this.gameStatus() === 'won') return;
+    const currentGrid = this.sudokuGrid().map(r => [...r]);
+    const current = currentGrid[row][col];
+    let nextVal = 0;
+    if (current === 0) nextVal = 1;
+    else if (current === 1) nextVal = 2;
+    else if (current === 2) nextVal = 3;
+    else if (current === 3) nextVal = 4;
+    else if (current === 4) nextVal = 0;
+    currentGrid[row][col] = nextVal;
+    this.sudokuGrid.set(currentGrid);
+    this.checkSudokuWin();
+  }
+
+  checkSudokuWin() {
+    const grid = this.sudokuGrid();
+    for (let r = 0; r < 4; r++) {
+      for (let c = 0; c < 4; c++) {
+        if (grid[r][c] !== this.sudokuSolution[r][c]) {
+          return;
+        }
+      }
+    }
+    this.gameStatus.set('won');
+    this.solvedGames.update(list => list.includes(this.currentGame()) ? list : [...list, this.currentGame()]);
+  }
+
+  selectPatchesWord(word: any) {
+    if (word.grouped || this.gameStatus() === 'won') return;
+    
+    const words = this.patchesWords().map(w => w.text === word.text ? { ...w, selected: !w.selected } : w);
+    this.patchesWords.set(words);
+
+    const selectedWords = words.filter(w => w.selected);
+    if (selectedWords.length === 4) {
+      const allInSameCategory = selectedWords.every(w => w.category === selectedWords[0].category);
+      if (allInSameCategory) {
+        setTimeout(() => {
+          const groupedWords = this.patchesWords().map(w => {
+            if (w.selected) {
+              return { ...w, selected: false, grouped: true };
+            }
+            return w;
+          });
+          this.patchesWords.set(groupedWords);
+          
+          if (groupedWords.every(w => w.grouped)) {
+            this.gameStatus.set('won');
+            this.solvedGames.update(list => list.includes(this.currentGame()) ? list : [...list, this.currentGame()]);
+          }
+        }, 300);
+      } else {
+        setTimeout(() => {
+          const resetWords = this.patchesWords().map(w => {
+            if (w.selected) {
+              return { ...w, selected: false };
+            }
+            return w;
+          });
+          this.patchesWords.set(resetWords);
+        }, 500);
+      }
+    }
+  }
+
+  clickZipNumber(item: any) {
+    if (item.clicked || this.gameStatus() === 'won') return;
+    if (item.num === this.nextZipNum()) {
+      const updated = this.zipNumbers().map(z => z.num === item.num ? { ...z, clicked: true } : z);
+      this.zipNumbers.set(updated);
+      this.nextZipNum.set(this.nextZipNum() + 1);
+      if (this.nextZipNum() > 8) {
+        this.gameStatus.set('won');
+        this.solvedGames.update(list => list.includes(this.currentGame()) ? list : [...list, this.currentGame()]);
+      }
+    }
+  }
+
+  openGame(gameName: string): void {
+    this.currentGame.set(gameName);
+    this.gameStatus.set('playing');
+    if (gameName.includes('Sudoku')) {
+      this.sudokuGrid.set([
+        [1, 0, 0, 4],
+        [0, 4, 1, 0],
+        [0, 1, 4, 0],
+        [4, 0, 0, 1]
+      ]);
+    } else if (gameName.includes('Patches')) {
+      const words = this.initialPatchesWords.map(w => ({ ...w, selected: false, grouped: false }));
+      this.patchesWords.set(this.shuffleArray(words));
+    } else if (gameName.includes('Zip')) {
+      const nums = [1, 2, 3, 4, 5, 6, 7, 8].map(n => ({ num: n, clicked: false }));
+      this.zipNumbers.set(this.shuffleArray(nums));
+      this.nextZipNum.set(1);
+    }
+    this.showGameModal.set(true);
+  }
+
+  closeGameModal(): void {
+    this.showGameModal.set(false);
+  }
+
+  shuffleArray(array: any[]): any[] {
+    const arr = [...array];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
   }
 }

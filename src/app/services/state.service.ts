@@ -115,11 +115,12 @@ const SEED_COMPANIES: Company[] = [
   }
 ];
 
-function makeUser(u: Omit<User, 'savedJobs' | 'savedPosts' | 'openToWork' | 'following'> & Partial<Pick<User, 'savedJobs' | 'savedPosts' | 'openToWork' | 'following'>>): User {
+function makeUser(u: Omit<User, 'savedJobs' | 'savedPosts' | 'openToWork' | 'isHiring' | 'following'> & Partial<Pick<User, 'savedJobs' | 'savedPosts' | 'openToWork' | 'isHiring' | 'following'>>): User {
   return {
     savedJobs: [],
     savedPosts: [],
     openToWork: false,
+    isHiring: false,
     following: [],
     ...u,
   };
@@ -506,6 +507,7 @@ function migrateUser(u: any): User {
     savedJobs: [],
     savedPosts: [],
     openToWork: false,
+    isHiring: false,
     following: [],
     role: u.role || 'candidate',
     ...u,
@@ -594,6 +596,8 @@ export class StateService {
       name: `${profile.firstName} ${profile.lastName}`.trim(),
       email: email,
       password: 'password',
+      avatarUrl: profile.profilePhotoUrl,
+      coverUrl: profile.coverPhotoUrl,
       headline: profile.headline || 'Add headline',
       location: profile.location || 'Add location',
       about: profile.bio || '',
@@ -615,13 +619,18 @@ export class StateService {
         startYear: edu.startYear,
         endYear: edu.endYear
       })),
-      skills: (profile.skills || []).map((s: any) => s.name || s),
+      skills: (profile.skills || []).map((s: any) => {
+        if (typeof s === 'string') return s;
+        if (s && typeof s === 'object') return s.skillName || s.name || '';
+        return '';
+      }).filter(Boolean),
       avatarInitials: initials,
       avatarColor: '#0A66C2',
       coverColor: 'linear-gradient(135deg, #0A66C2, #004182)',
       savedJobs: [],
       savedPosts: [],
       openToWork: profile.openToWork || false,
+      isHiring: profile.isHiring || false,
       autoApplyEnabled: profile.autoApplyEnabled || false,
       autoApplyKeyword: profile.autoApplyKeyword || '',
       autoApplyLocation: profile.autoApplyLocation || '',
@@ -634,7 +643,7 @@ export class StateService {
 
   refreshAllData(): void {
     if (this.isTesting) return;
-    const token = localStorage.getItem('prolink_token');
+    const token = localStorage.getItem('linkedin_token');
     if (!token) return;
 
     this.http.get<any>(`${this.API_URL}/profile/me`).subscribe({
@@ -652,7 +661,8 @@ export class StateService {
                 likes: [],
                 comments: [],
                 reposts: p.repostsCount || 0,
-                image: p.media?.[0]?.url || undefined
+                image: p.media?.[0] && (p.media[0].mediaType === 0 || p.media[0].mediaType === 'Image') ? p.media[0].url : undefined,
+                video: p.media?.[0] && (p.media[0].mediaType === 1 || p.media[0].mediaType === 'Video') ? p.media[0].url : undefined
               }));
 
               this.http.get<any>(`${this.API_URL}/companies`).subscribe({
@@ -750,7 +760,7 @@ export class StateService {
 
   refreshNotifications(): void {
     if (this.isTesting) return;
-    const token = localStorage.getItem('prolink_token');
+    const token = localStorage.getItem('linkedin_token');
     if (!token) return;
 
     this.http.get<any>(`${this.API_URL}/notifications?pageSize=50`).subscribe({
@@ -776,7 +786,7 @@ export class StateService {
 
   refreshConnections(): void {
     if (this.isTesting) return;
-    const token = localStorage.getItem('prolink_token');
+    const token = localStorage.getItem('linkedin_token');
     if (!token) return;
 
     forkJoin({
@@ -828,7 +838,7 @@ export class StateService {
 
   refreshConversations(): void {
     if (this.isTesting) return;
-    const token = localStorage.getItem('prolink_token');
+    const token = localStorage.getItem('linkedin_token');
     if (!token) return;
 
     this.http.get<any>(`${this.API_URL}/messages/conversations?pageSize=50`).subscribe({
@@ -876,6 +886,20 @@ export class StateService {
   readonly currentUser = computed(() => {
     const d = this.data();
     return d.currentUserId ? d.users.find((u) => u.id === d.currentUserId) ?? null : null;
+  });
+
+  readonly needsOnboarding = computed(() => {
+    const user = this.currentUser();
+    if (!user) return false;
+    const onboardedKey = `linkedin_onboarded_${user.id}`;
+    if (localStorage.getItem(onboardedKey) === 'true') {
+      return false;
+    }
+    const isBrandNew = (!user.education || user.education.length === 0) &&
+                       (!user.skills || user.skills.length === 0) &&
+                       (!user.experience || user.experience.length === 0) &&
+                       (!user.headline || user.headline === 'Add headline');
+    return isBrandNew;
   });
 
   readonly users = computed(() => {
@@ -1031,9 +1055,13 @@ export class StateService {
           reasons.push(`Went to ${schName}`);
         }
 
-        // Same Skills
-        const mySkills = new Set(user.skills.map((s) => s.toLowerCase().trim()));
-        const sharedSkills = u.skills.filter((s) => mySkills.has(s.toLowerCase().trim()) && s !== "");
+        const mySkills = new Set((user.skills || []).map((s) => {
+          const val = typeof s === 'string' ? s : (s as any).skillName || (s as any).name || '';
+          return val.toLowerCase().trim();
+        }).filter(Boolean));
+        const sharedSkills = (u.skills || [])
+          .map((s) => typeof s === 'string' ? s : (s as any).skillName || (s as any).name || '')
+          .filter((s) => s && mySkills.has(s.toLowerCase().trim()));
         if (sharedSkills.length > 0) {
           score += sharedSkills.length * 15;
           if (sharedSkills.length <= 2) {
@@ -1086,7 +1114,9 @@ export class StateService {
         let locationScore = 0;
 
         // Skills Match (40%)
-        const userSkills = user.skills.filter(Boolean);
+        const userSkills = (user.skills || [])
+          .map((s) => typeof s === 'string' ? s : (s as any).skillName || (s as any).name || '')
+          .filter(Boolean);
         if (userSkills.length > 0) {
           const matchedSkills = userSkills.filter((skill) => {
             const regex = new RegExp(`\\b${skill.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'i');
@@ -1303,7 +1333,7 @@ export class StateService {
             about: "Administering the platform and managing job and ad approvals.",
             connections: 10, profileViews: 5, experience: [], education: [], skills: [],
             avatarInitials: "AD", avatarColor: "#333333", coverColor: "linear-gradient(135deg, #333333, #111111)",
-            role: "admin", savedJobs: [], savedPosts: [], openToWork: false, following: []
+            role: "admin", savedJobs: [], savedPosts: [], openToWork: false, isHiring: false, following: []
           });
         }
         if (!parsed.users.some(u => u.email === 'business@example.com')) {
@@ -1313,7 +1343,7 @@ export class StateService {
             about: "Recruiting top talent and promoting job postings and advertisements.",
             connections: 85, profileViews: 42, experience: [], education: [], skills: [],
             avatarInitials: "BR", avatarColor: "#057642", coverColor: "linear-gradient(135deg, #057642, #03422a)",
-            role: "business", isApprovedBusiness: true, savedJobs: [], savedPosts: [], openToWork: false, following: []
+            role: "business", isApprovedBusiness: true, savedJobs: [], savedPosts: [], openToWork: false, isHiring: false, following: []
           });
         }
         if (!parsed.users.some(u => u.email === 'recruiter@techcorp.com')) {
@@ -1323,7 +1353,7 @@ export class StateService {
             about: "Hiring engineering talent for our cloud automation platform.",
             connections: 3, profileViews: 1, experience: [], education: [], skills: [],
             avatarInitials: "TC", avatarColor: "#8B44AC", coverColor: "linear-gradient(135deg, #8B44AC, #000)",
-            role: "business", isApprovedBusiness: false, savedJobs: [], savedPosts: [], openToWork: false, following: []
+            role: "business", isApprovedBusiness: false, savedJobs: [], savedPosts: [], openToWork: false, isHiring: false, following: []
           });
         }
 
@@ -1373,8 +1403,8 @@ export class StateService {
             return { otpRequired: true, email };
           }
           if (res.data.accessToken) {
-            localStorage.setItem('prolink_token', res.data.accessToken);
-            localStorage.setItem('prolink_refresh_token', res.data.refreshToken);
+            localStorage.setItem('linkedin_token', res.data.accessToken);
+            localStorage.setItem('linkedin_refresh_token', res.data.refreshToken);
             
             const profileRes = await this.http.get<any>(`${this.API_URL}/profile/me`).toPromise();
             const apiUser = this.mapProfileToUser(profileRes.data, email, res.data.roles?.[0] || 'candidate');
@@ -1406,8 +1436,8 @@ export class StateService {
         const payload = { idToken, role };
         const res = await this.http.post<any>(`${this.API_URL}/auth/google-login`, payload).toPromise();
         if (res && res.data && res.data.accessToken) {
-          localStorage.setItem('prolink_token', res.data.accessToken);
-          localStorage.setItem('prolink_refresh_token', res.data.refreshToken);
+          localStorage.setItem('linkedin_token', res.data.accessToken);
+          localStorage.setItem('linkedin_refresh_token', res.data.refreshToken);
           
           const profileRes = await this.http.get<any>(`${this.API_URL}/profile/me`).toPromise();
           const apiUser = this.mapProfileToUser(profileRes.data, res.data.email || 'user@example.com', res.data.roles?.[0] || role || 'candidate');
@@ -1422,7 +1452,13 @@ export class StateService {
           return true;
         }
       } catch (err) {
-        console.warn("Backend API Google login failed. Falling back to mock.", err);
+        console.warn("Backend API Google login failed.", err);
+        // Fallback to Alex mock login ONLY in testing environment or if client is unconfigured/using mock tokens
+        if (idToken.startsWith('mock_google_token_') || this.GOOGLE_CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID_GOES_HERE' || idToken.includes('mock')) {
+          console.warn("Falling back to mock user login.");
+        } else {
+          return false;
+        }
       }
     }
     
@@ -1435,8 +1471,8 @@ export class StateService {
       try {
         const res = await this.http.post<any>(`${this.API_URL}/auth/verify-otp`, { email, code }).toPromise();
         if (res && res.data && res.data.accessToken) {
-          localStorage.setItem('prolink_token', res.data.accessToken);
-          localStorage.setItem('prolink_refresh_token', res.data.refreshToken);
+          localStorage.setItem('linkedin_token', res.data.accessToken);
+          localStorage.setItem('linkedin_refresh_token', res.data.refreshToken);
           
           const profileRes = await this.http.get<any>(`${this.API_URL}/profile/me`).toPromise();
           const apiUser = this.mapProfileToUser(profileRes.data, email, res.data.roles?.[0] || 'candidate');
@@ -1463,9 +1499,17 @@ export class StateService {
   }
 
   logout(): void {
-    localStorage.removeItem('prolink_token');
-    localStorage.removeItem('prolink_refresh_token');
-    this.data.update((d) => ({ ...d, currentUserId: null }));
+    localStorage.removeItem('linkedin_token');
+    localStorage.removeItem('linkedin_refresh_token');
+    this.data.update((d) => ({
+      ...d,
+      currentUserId: null,
+      conversations: [],
+      notifications: [],
+      connections: [],
+      applications: [],
+      jobAlerts: []
+    }));
   }
 
   async forgotPassword(email: string): Promise<boolean> {
@@ -1517,8 +1561,8 @@ export class StateService {
         
         const res = await this.http.post<any>(`${this.API_URL}/auth/register`, payload).toPromise();
         if (res && res.data && res.data.accessToken) {
-          localStorage.setItem('prolink_token', res.data.accessToken);
-          localStorage.setItem('prolink_refresh_token', res.data.refreshToken);
+          localStorage.setItem('linkedin_token', res.data.accessToken);
+          localStorage.setItem('linkedin_refresh_token', res.data.refreshToken);
           
           const profileRes = await this.http.get<any>(`${this.API_URL}/profile/me`).toPromise();
           const apiUser = this.mapProfileToUser(profileRes.data, email, role || 'candidate');
@@ -1546,7 +1590,7 @@ export class StateService {
       location: "Add your location", about: "",
       connections: 0, profileViews: 0, experience: [], education: [], skills: [],
       avatarInitials: initials, avatarColor: color, coverColor: `linear-gradient(135deg, ${color}, #000)`,
-      savedJobs: [], savedPosts: [], openToWork: false, following: [],
+      savedJobs: [], savedPosts: [], openToWork: false, isHiring: false, following: [],
       role: role || 'candidate',
       isApprovedBusiness: role === 'business' ? false : undefined
     };
@@ -1554,21 +1598,31 @@ export class StateService {
     return newUser;
   }
 
-  createPost(content: string, image?: string): void {
+  createPost(content: string, image?: string, video?: string): void {
     const user = this.currentUser();
     if (!user) return;
     
     if (this.isTesting) {
-      const post: Post = { id: `p${Date.now()}`, authorId: user.id, content, createdAt: new Date().toISOString(), likes: [], comments: [], reposts: 0, image };
+      const post: Post = { id: `p${Date.now()}`, authorId: user.id, content, createdAt: new Date().toISOString(), likes: [], comments: [], reposts: 0, image, video };
       this.data.update((d) => ({ ...d, posts: [post, ...d.posts] }));
       return;
     }
     
+    const media = [];
+    let postType = 0;
+    if (video) {
+      postType = 2;
+      media.push({ mediaType: 1, url: video, orderIndex: 0 });
+    } else if (image) {
+      postType = 1;
+      media.push({ mediaType: 0, url: image, orderIndex: 0 });
+    }
+
     const payload = {
       content,
-      postType: image ? 1 : 0,
+      postType,
       privacy: 0,
-      media: image ? [{ mediaType: 0, url: image, orderIndex: 0 }] : []
+      media
     };
     
     this.http.post<any>(`${this.API_URL}/posts`, payload).subscribe({
@@ -1577,17 +1631,17 @@ export class StateService {
       },
       error: (err) => {
         console.warn("Backend createPost failed, using local fallback", err);
-        const post: Post = { id: `p${Date.now()}`, authorId: user.id, content, createdAt: new Date().toISOString(), likes: [], comments: [], reposts: 0, image };
+        const post: Post = { id: `p${Date.now()}`, authorId: user.id, content, createdAt: new Date().toISOString(), likes: [], comments: [], reposts: 0, image, video };
         this.data.update((d) => ({ ...d, posts: [post, ...d.posts] }));
       }
     });
   }
 
-  editPost(postId: string, content: string, image?: string): void {
+  editPost(postId: string, content: string, image?: string, video?: string): void {
     if (this.isTesting) {
       this.data.update((d) => ({
         ...d,
-        posts: d.posts.map((p) => p.id === postId ? { ...p, content, image } : p)
+        posts: d.posts.map((p) => p.id === postId ? { ...p, content, image, video } : p)
       }));
       return;
     }
@@ -1604,7 +1658,7 @@ export class StateService {
         console.warn("Backend editPost failed, using local fallback", err);
         this.data.update((d) => ({
           ...d,
-          posts: d.posts.map((p) => p.id === postId ? { ...p, content, image } : p)
+          posts: d.posts.map((p) => p.id === postId ? { ...p, content, image, video } : p)
         }));
       }
     });
@@ -2005,40 +2059,152 @@ export class StateService {
 
     if (this.isTesting) return;
 
-    const names = updates.name ? updates.name.trim().split(" ") : null;
-    const firstName = names ? names[0] : undefined;
-    const lastName = names ? names.slice(1).join(" ") : undefined;
+    // Direct upload for profile picture
+    if (updates.avatarUrl !== undefined) {
+      this.http.post<any>(`${this.API_URL}/users/me/profile-picture`, { url: updates.avatarUrl }).subscribe({
+        next: () => {
+          this.refreshAllData();
+        },
+        error: (err) => {
+          console.warn("Failed to upload profile picture via dedicated endpoint", err);
+        }
+      });
+    }
 
-    const payload = {
-      firstName,
-      lastName,
-      headline: updates.headline,
-      bio: updates.about,
-      location: updates.location,
-      openToWork: updates.openToWork,
-      autoApplyEnabled: updates.autoApplyEnabled,
-      autoApplyKeyword: updates.autoApplyKeyword,
-      autoApplyLocation: updates.autoApplyLocation,
-      autoApplyJobType: updates.autoApplyJobType
-    };
+    // Direct upload for cover photo
+    if (updates.coverUrl !== undefined) {
+      this.http.post<any>(`${this.API_URL}/users/me/cover-photo`, { url: updates.coverUrl }).subscribe({
+        next: () => {
+          this.refreshAllData();
+        },
+        error: (err) => {
+          console.warn("Failed to upload cover photo via dedicated endpoint", err);
+        }
+      });
+    }
 
-    this.http.put<any>(`${this.API_URL}/profile`, payload).subscribe({
-      next: () => {
-        this.refreshAllData();
-      },
-      error: (err) => {
-        console.warn("Failed to update profile on backend", err);
+    // 1. Basic profile updates (exclude photo URLs to avoid overwriting/redundancy)
+    if (updates.name !== undefined || updates.headline !== undefined || updates.about !== undefined || updates.location !== undefined || updates.openToWork !== undefined || updates.isHiring !== undefined || updates.autoApplyEnabled !== undefined || updates.autoApplyKeyword !== undefined || updates.autoApplyLocation !== undefined || updates.autoApplyJobType !== undefined) {
+      const names = updates.name ? updates.name.trim().split(" ") : null;
+      const firstName = names ? names[0] : undefined;
+      const lastName = names ? names.slice(1).join(" ") : undefined;
+
+      const payload = {
+        firstName,
+        lastName,
+        headline: updates.headline,
+        bio: updates.about,
+        location: updates.location,
+        openToWork: updates.openToWork,
+        isHiring: updates.isHiring,
+        autoApplyEnabled: updates.autoApplyEnabled,
+        autoApplyKeyword: updates.autoApplyKeyword,
+        autoApplyLocation: updates.autoApplyLocation,
+        autoApplyJobType: updates.autoApplyJobType
+      };
+
+      this.http.put<any>(`${this.API_URL}/profile`, payload).subscribe({
+        next: () => {
+          this.refreshAllData();
+        },
+        error: (err) => {
+          console.warn("Failed to update profile on backend", err);
+        }
+      });
+    }
+
+    // 2. Education diff updates
+    if (updates.education !== undefined) {
+      const oldEdu = user.education || [];
+      const newEdu = updates.education || [];
+
+      // Added items
+      const added = newEdu.filter(item => String(item.id).startsWith('edu_'));
+      for (const edu of added) {
+        const payload = {
+          school: edu.school,
+          degree: edu.degree,
+          fieldOfStudy: edu.field,
+          startYear: edu.startYear ? parseInt(String(edu.startYear)) : null,
+          endYear: edu.endYear ? parseInt(String(edu.endYear)) : null
+        };
+        this.http.post<any>(`${this.API_URL}/profile/education`, payload).subscribe({
+          next: () => this.refreshAllData(),
+          error: (err) => console.warn("Failed to add education", err)
+        });
       }
-    });
+
+      // Removed items
+      const removed = oldEdu.filter(oldItem => !newEdu.some(newItem => newItem.id === oldItem.id));
+      for (const edu of removed) {
+        this.http.delete<any>(`${this.API_URL}/profile/education/${edu.id}`).subscribe({
+          next: () => this.refreshAllData(),
+          error: (err) => console.warn("Failed to delete education", err)
+        });
+      }
+    }
+
+    // 3. Experience diff updates
+    if (updates.experience !== undefined) {
+      const oldExp = user.experience || [];
+      const newExp = updates.experience || [];
+
+      // Added items
+      const added = newExp.filter(item => String(item.id).startsWith('exp'));
+      for (const exp of added) {
+        const payload = {
+          company: exp.company,
+          title: exp.title,
+          startDate: exp.startDate ? new Date(exp.startDate).toISOString() : new Date().toISOString(),
+          endDate: exp.endDate ? new Date(exp.endDate).toISOString() : null,
+          isCurrent: exp.endDate ? false : true,
+          description: exp.description || ''
+        };
+        this.http.post<any>(`${this.API_URL}/profile/experience`, payload).subscribe({
+          next: () => this.refreshAllData(),
+          error: (err) => console.warn("Failed to add experience", err)
+        });
+      }
+
+      // Removed items
+      const removed = oldExp.filter(oldItem => !newExp.some(newItem => newItem.id === oldItem.id));
+      for (const exp of removed) {
+        this.http.delete<any>(`${this.API_URL}/profile/experience/${exp.id}`).subscribe({
+          next: () => this.refreshAllData(),
+          error: (err) => console.warn("Failed to delete experience", err)
+        });
+      }
+    }
+
+    // 4. Skills updates
+    if (updates.skills !== undefined) {
+      this.http.put<any>(`${this.API_URL}/profile/skills`, updates.skills).subscribe({
+        next: () => this.refreshAllData(),
+        error: (err) => console.warn("Failed to update skills", err)
+      });
+    }
   }
 
   toggleOpenToWork(): void {
     const user = this.currentUser();
     if (!user) return;
+    const nextVal = !user.openToWork;
     this.data.update((d) => ({
       ...d,
-      users: d.users.map((u) => u.id === user.id ? { ...u, openToWork: !u.openToWork } : u)
+      users: d.users.map((u) => u.id === user.id ? { ...u, openToWork: nextVal } : u)
     }));
+    this.updateProfile({ openToWork: nextVal });
+  }
+
+  toggleIsHiring(): void {
+    const user = this.currentUser();
+    if (!user) return;
+    const nextVal = !user.isHiring;
+    this.data.update((d) => ({
+      ...d,
+      users: d.users.map((u) => u.id === user.id ? { ...u, isHiring: nextVal } : u)
+    }));
+    this.updateProfile({ isHiring: nextVal });
   }
 
   followCompany(companyId: string): void {
@@ -2580,7 +2746,7 @@ export class StateService {
         key: "rzp_test_SyQggul1MhJ0jo",
         amount: orderData.amount,
         currency: orderData.currency || "INR",
-        name: "ProLink Ads",
+        name: "LinkedIn Ads",
         description: `Ad campaign promotion for Ad ID: ${adId}`,
         order_id: orderData.id,
         handler: async (response: any) => {

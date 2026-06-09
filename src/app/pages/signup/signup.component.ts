@@ -21,7 +21,7 @@ import { StateService } from '../../services/state.service';
       </div>
 
       <!-- Main Sign Up Card -->
-      <div class="bg-white rounded-lg border border-gray-200 shadow-sm w-full max-w-[420px] p-8 space-y-6">
+      <div class="bg-white rounded-card border border-border shadow-xs w-full max-w-[420px] p-8 space-y-6">
         <div class="text-center space-y-1">
           <h1 class="text-2xl md:text-3xl font-semibold text-gray-900 leading-tight">
             Join LinkedIn now — it's free!
@@ -35,7 +35,40 @@ import { StateService } from '../../services/state.service';
           </div>
         }
 
-        <form [formGroup]="registerForm" class="space-y-4">
+        <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="space-y-4">
+          <!-- Full name -->
+          <div>
+            <label class="text-gray-700 text-xs font-semibold block mb-1">Full name</label>
+            <input
+              type="text"
+              formControlName="name"
+              class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#0A66C2] focus:ring-1 focus:ring-[#0A66C2]"
+              placeholder="First and last name"
+            />
+          </div>
+
+          <!-- Email -->
+          <div>
+            <label class="text-gray-700 text-xs font-semibold block mb-1">Email</label>
+            <input
+              type="email"
+              formControlName="email"
+              class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#0A66C2] focus:ring-1 focus:ring-[#0A66C2]"
+              placeholder="Email address"
+            />
+          </div>
+
+          <!-- Password -->
+          <div>
+            <label class="text-gray-700 text-xs font-semibold block mb-1">Password (6+ characters)</label>
+            <input
+              type="password"
+              formControlName="password"
+              class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#0A66C2] focus:ring-1 focus:ring-[#0A66C2]"
+              placeholder="Password"
+            />
+          </div>
+
           <!-- Join As -->
           <div>
             <label class="text-gray-700 text-xs font-semibold block mb-1">Join as</label>
@@ -48,17 +81,22 @@ import { StateService } from '../../services/state.service';
             </select>
           </div>
 
-          <!-- Gmail SSO Button -->
           <button
-            type="button"
-            (click)="onGmailSignup()"
-            class="w-full border border-gray-300 hover:border-gray-400 bg-white text-gray-700 font-semibold text-sm rounded-full py-2.5 px-4 flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors shadow-sm focus:outline-none cursor-pointer"
+            type="submit"
+            [disabled]="registerForm.invalid"
+            class="w-full bg-[#0A66C2] hover:bg-[#004182] disabled:bg-gray-300 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-full py-2.5 transition-colors cursor-pointer"
           >
-            <svg class="w-4 h-4" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" fill="#EA4335"/>
-            </svg>
-            <span>Continue with Gmail</span>
+            Agree & Join
           </button>
+
+          <div class="flex items-center gap-3 my-4">
+            <hr class="flex-1 border-gray-200" />
+            <span class="text-gray-400 text-xs">or</span>
+            <hr class="flex-1 border-gray-200" />
+          </div>
+
+          <!-- Google Sign-In Button Target -->
+          <div id="googleBtnSignup" class="w-full flex justify-center"></div>
         </form>
 
         <p class="text-center text-sm text-gray-600">

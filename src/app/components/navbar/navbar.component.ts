@@ -9,8 +9,8 @@ import { StateService } from '../../services/state.service';
   standalone: true,
   imports: [CommonModule, RouterLink, RouterLinkActive, FormsModule],
   template: `
-    <nav class="fixed top-0 left-0 right-0 z-50 bg-white border-b border-[#E0DFDC] shadow-sm">
-      <div class="max-w-[1128px] mx-auto px-4 flex items-center h-14 gap-2">
+    <nav class="fixed top-0 left-0 right-0 z-50 bg-white border-b border-border shadow-xs">
+      <div class="max-w-[1128px] mx-auto px-4 flex items-center h-[52px] gap-2">
         @if (currentUser()?.role === 'admin' || currentUser()?.role === 'business') {
           <div class="flex items-center gap-2">
             <div class="flex-shrink-0 w-9 h-9 bg-[#0A66C2] rounded flex items-center justify-center mr-1">
@@ -44,7 +44,7 @@ import { StateService } from '../../services/state.service';
               </button>
 
               @if (showDropdown()) {
-                <div class="absolute right-0 top-11 bg-white border border-[#E0DFDC] rounded-lg shadow-lg z-50 w-56 py-1" (click)="$event.stopPropagation()">
+                <div class="absolute right-0 top-11 bg-white border border-border rounded-card shadow-md z-50 w-56 py-1" (click)="$event.stopPropagation()">
                   <div class="px-4 py-3 border-b border-gray-100">
                     <p class="font-semibold text-sm text-gray-900 truncate">{{ currentUser()?.name }}</p>
                     <p class="text-xs text-gray-500 truncate mt-0.5">{{ currentUser()?.email }}</p>
@@ -167,7 +167,7 @@ import { StateService } from '../../services/state.service';
 
               <!-- Dropdown Menu Box -->
               @if (showDropdown()) {
-                <div class="absolute right-0 top-14 bg-white border border-[#E0DFDC] rounded-lg shadow-lg z-50 w-60 py-1" (click)="$event.stopPropagation()">
+                <div class="absolute right-0 top-14 bg-white border border-border rounded-card shadow-md z-50 w-60 py-1" (click)="$event.stopPropagation()">
                   <div class="px-3 py-3">
                     <div class="flex items-center gap-2 mb-3">
                       @if (currentUser()?.avatarUrl) {
@@ -234,7 +234,7 @@ import { StateService } from '../../services/state.service';
       align-items: center;
       justify-content: center;
       width: 5.25rem;
-      height: 3.5rem;
+      height: 52px;
       cursor: pointer;
       border-bottom: 2px solid transparent;
       transition: all 0.2s;

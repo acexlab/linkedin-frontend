@@ -37,6 +37,7 @@ export interface User {
   savedJobs: string[];
   savedPosts: string[];
   openToWork: boolean;
+  isHiring: boolean;
   autoApplyEnabled?: boolean;
   autoApplyKeyword?: string;
   autoApplyLocation?: string;
@@ -73,6 +74,7 @@ export interface Post {
   comments: Comment[];
   reposts: number;
   image?: string;
+  video?: string;
   isJobUpdate?: boolean;
 }
 

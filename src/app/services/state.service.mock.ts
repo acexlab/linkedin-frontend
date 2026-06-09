@@ -105,7 +105,12 @@ export function createMockStateService(overrides: Record<string, any> = {}) {
     editPost: vi.fn(),
     deletePost: vi.fn(),
     sendMessage: vi.fn(),
-    markConversationsAsRead: vi.fn()
+    markConversationsAsRead: vi.fn(),
+    toggleOpenToWork: vi.fn(),
+    toggleIsHiring: vi.fn(),
+    GOOGLE_CLIENT_ID: 'mock-client-id',
+    googleLogin: vi.fn().mockResolvedValue(true),
+    updateProfile: vi.fn()
   };
 
   // Merge overrides

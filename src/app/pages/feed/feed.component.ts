@@ -11,12 +11,12 @@ import { timeAgo } from '../../services/utils';
   standalone: true,
   imports: [CommonModule, RouterLink, FormsModule],
   template: `
-    <div class="max-w-[1128px] mx-auto px-4 py-4 mt-14">
-      <div class="grid grid-cols-1 lg:grid-cols-[225px_1fr_290px] gap-4">
+    <div class="max-w-[1128px] mx-auto px-4 py-4 mt-[68px]">
+      <div class="grid grid-cols-1 lg:grid-cols-[225px_1fr_300px] gap-4">
 
         <!-- LEFT SIDEBAR (MAPPED TO SCREENSHOT) -->
         <div class="hidden lg:block space-y-2">
-          <div class="bg-white rounded-lg border border-[#E0DFDC] overflow-hidden shadow-xs">
+          <div class="bg-white rounded-card border border-border overflow-hidden shadow-xs">
             <!-- Cover image background -->
             <div class="relative group h-16 w-full bg-[#E0DFDC]">
               @if (currentUser()?.coverUrl) {
@@ -38,6 +38,55 @@ import { timeAgo } from '../../services/utils';
                   <img [src]="currentUser()!.avatarUrl" class="w-full h-full object-cover" alt="Profile" />
                 } @else {
                   <span class="text-white font-bold text-2xl">{{ currentUser()?.avatarInitials }}</span>
+                }
+                @if (currentUser()?.openToWork || currentUser()?.isHiring) {
+                  <svg viewBox="0 0 100 100" class="absolute inset-0 w-full h-full pointer-events-none select-none z-10">
+                    <defs>
+                      <!-- Paths when ONLY one badge is active -->
+                      <!-- #OPENTOWORK (Bottom-Left) -->
+                      <path id="arcOpenOnlyFeed" d="M 12,28 A 44,44 0 0,0 78,84" />
+                      <path id="textArcOpenOnlyFeed" d="M 14.5,29.5 A 40,40 0 0,0 74.5,80.5" />
+                      
+                      <!-- #HIRING (Bottom-Right) -->
+                      <path id="arcHiringOnlyFeed" d="M 22,84 A 44,44 0 0,0 88,28" />
+                      <path id="textArcHiringOnlyFeed" d="M 24.5,80.5 A 40,40 0 0,0 84.5,29.5" />
+                      
+                      <!-- Paths when BOTH badges are active -->
+                      <!-- #OPENTOWORK (Left-Half) -->
+                      <path id="arcOpenBothFeed" d="M 24.8,14 A 44,44 0 0,0 24.8,86" />
+                      <path id="textArcOpenBothFeed" d="M 27,17.2 A 40,40 0 0,0 27,82.8" />
+                      
+                      <!-- #HIRING (Right-Half) -->
+                      <path id="arcHiringBothFeed" d="M 75.2,86 A 44,44 0 0,0 75.2,14" />
+                      <path id="textArcHiringBothFeed" d="M 73,82.8 A 40,40 0 0,0 73,17.2" />
+                    </defs>
+
+                    @if (currentUser()?.openToWork && currentUser()?.isHiring) {
+                      <!-- #OPENTOWORK (Left) -->
+                      <use href="#arcOpenBothFeed" fill="none" stroke="#057642" stroke-width="12" />
+                      <text fill="white" font-size="5.2" font-weight="900" letter-spacing="0.6" font-family="system-ui, sans-serif">
+                        <textPath href="#textArcOpenBothFeed" startOffset="50%" text-anchor="middle">#OPENTOWORK</textPath>
+                      </text>
+
+                      <!-- #HIRING (Right) -->
+                      <use href="#arcHiringBothFeed" fill="none" stroke="#7A15F7" stroke-width="12" />
+                      <text fill="white" font-size="5.2" font-weight="900" letter-spacing="0.6" font-family="system-ui, sans-serif">
+                        <textPath href="#textArcHiringBothFeed" startOffset="50%" text-anchor="middle">#HIRING</textPath>
+                      </text>
+                    }
+                    @else if (currentUser()?.openToWork) {
+                      <use href="#arcOpenOnlyFeed" fill="none" stroke="#057642" stroke-width="12" />
+                      <text fill="white" font-size="5.2" font-weight="900" letter-spacing="0.6" font-family="system-ui, sans-serif">
+                        <textPath href="#textArcOpenOnlyFeed" startOffset="50%" text-anchor="middle">#OPENTOWORK</textPath>
+                      </text>
+                    }
+                    @else if (currentUser()?.isHiring) {
+                      <use href="#arcHiringOnlyFeed" fill="none" stroke="#7A15F7" stroke-width="12" />
+                      <text fill="white" font-size="5.2" font-weight="900" letter-spacing="0.6" font-family="system-ui, sans-serif">
+                        <textPath href="#textArcHiringOnlyFeed" startOffset="50%" text-anchor="middle">#HIRING</textPath>
+                      </text>
+                    }
+                  </svg>
                 }
                 <!-- Hover Upload Overlay -->
                 <input type="file" #avatarInput (change)="onUploadAvatar($event)" class="hidden" accept="image/*" />
@@ -82,7 +131,7 @@ import { timeAgo } from '../../services/utils';
           </div>
 
           <!-- Bottom Left List Links -->
-          <div class="bg-white rounded-lg border border-[#E0DFDC] shadow-sm divide-y divide-gray-100 overflow-hidden">
+          <div class="bg-white rounded-card border border-border shadow-xs divide-y divide-gray-100 overflow-hidden">
             <a routerLink="/saved" class="flex items-center gap-2 px-4 py-3 text-xs text-gray-700 font-semibold hover:bg-gray-50 transition-colors">
               <svg class="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/>
@@ -105,8 +154,8 @@ import { timeAgo } from '../../services/utils';
         </div>
 
         <!-- MAIN FEED -->
-        <div class="space-y-3">
-          <div class="bg-white rounded-lg border border-[#E0DFDC] px-4 py-3 shadow-xs">
+        <div class="space-y-2">
+          <div class="bg-white rounded-card border border-border px-4 py-3 shadow-xs">
             <div class="flex items-center gap-3">
               <!-- Avatar -->
               <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 bg-[#0A66C2]">
@@ -126,10 +175,13 @@ import { timeAgo } from '../../services/utils';
                 <svg class="w-4 h-4 text-[#378FE9]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                 <span>Photo</span>
               </button>
-              <button (click)="openPostModal()" class="flex items-center gap-2 px-3 py-2 rounded text-xs font-semibold text-gray-500 hover:bg-gray-100 hover:text-gray-800 transition-colors flex-1 justify-center cursor-pointer">
+              
+              <input type="file" #directVideoInput (change)="onUploadPostVideo($event); openPostModalWithVideoPreloaded()" class="hidden" accept="video/*" />
+              <button (click)="directVideoInput.click()" class="flex items-center gap-2 px-3 py-2 rounded text-xs font-semibold text-gray-500 hover:bg-gray-100 hover:text-gray-800 transition-colors flex-1 justify-center cursor-pointer">
                 <svg class="w-4 h-4 text-[#C37D16]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
                 <span>Video</span>
               </button>
+              
               <button (click)="openPostModal()" class="flex items-center gap-2 px-3 py-2 rounded text-xs font-semibold text-gray-500 hover:bg-gray-100 hover:text-gray-800 transition-colors flex-1 justify-center cursor-pointer">
                 <svg class="w-4 h-4 text-[#E06847]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                 <span>Write article</span>
@@ -139,7 +191,7 @@ import { timeAgo } from '../../services/utils';
 
           <!-- POST CARDS LIST -->
           @for (post of posts(); track post.id) {
-            <div class="bg-white rounded-lg border border-[#E0DFDC] overflow-hidden shadow-xs" [attr.data-testid]="'card-post-' + post.id">
+            <div class="bg-white rounded-card border border-border overflow-hidden shadow-xs" [attr.data-testid]="'card-post-' + post.id">
               <div class="px-4 pt-3 pb-0">
                 <div class="flex items-start justify-between">
                   <a [routerLink]="['/profile', getAuthor(post)?.id]" class="flex items-start gap-2 group">
@@ -223,6 +275,13 @@ import { timeAgo } from '../../services/utils';
               @if (post.image) {
                 <div class="border-t border-gray-100">
                   <img [src]="post.image" class="w-full max-h-[420px] object-cover" alt="Post attachment" />
+                </div>
+              }
+
+              <!-- Render Attached Post Video -->
+              @if (post.video) {
+                <div class="border-t border-gray-100 flex justify-center bg-black">
+                  <video [src]="post.video" controls class="w-full max-h-[420px]"></video>
                 </div>
               }
 
@@ -356,7 +415,7 @@ import { timeAgo } from '../../services/utils';
         <!-- RIGHT SIDEBAR (RECOMMENDATIONS & NEWS widget) -->
         <div class="hidden lg:block space-y-2">
           <!-- LinkedIn News widget (Replicated from screenshot) -->
-          <div class="bg-white rounded-lg border border-[#E0DFDC] px-4 py-3 shadow-sm space-y-3">
+          <div class="bg-white rounded-card border border-border px-4 py-3 shadow-xs space-y-3">
             <div class="flex items-center justify-between">
               <h3 class="text-sm font-semibold text-gray-900">LinkedIn News</h3>
               <span class="text-xs text-gray-400 cursor-pointer" title="News info">ℹ️</span>
@@ -381,19 +440,19 @@ import { timeAgo } from '../../services/utils';
           </div>
 
           <!-- Today's Puzzles Widget (Replicated from screenshot) -->
-          <div class="bg-white rounded-lg border border-[#E0DFDC] px-4 py-3 shadow-sm space-y-3">
+          <div class="bg-white rounded-card border border-border px-4 py-3 shadow-xs space-y-3">
             <h3 class="text-sm font-semibold text-gray-900">Today's puzzles</h3>
             
             <div class="space-y-3">
               @for (puzzle of puzzleList; track puzzle.name) {
-                <div class="flex items-center justify-between cursor-pointer hover:bg-gray-50 p-1.5 rounded transition-colors group">
+                <div (click)="openGame(puzzle.name)" class="flex items-center justify-between cursor-pointer hover:bg-gray-50 p-1.5 rounded transition-colors group">
                   <div class="flex items-center gap-2">
                     <span class="text-xl">{{ puzzle.emoji }}</span>
                     <div>
-                      <p class="text-xs font-semibold text-gray-800 group-hover:text-[#0A66C2] leading-tight">
+                      <p class="text-xs font-semibold text-gray-800 group-hover:text-[#0A66C2] leading-tight font-sans">
                         {{ puzzle.name }}
                       </p>
-                      <p class="text-[10px] text-gray-400">
+                      <p class="text-[10px] text-gray-400 font-sans">
                         {{ puzzle.desc }}
                       </p>
                     </div>
@@ -413,8 +472,8 @@ import { timeAgo } from '../../services/utils';
       <!-- CREATE / EDIT POST MODAL OVERLAY -->
       @if (showPostModal()) {
         <div class="fixed inset-0 z-50 flex items-start justify-center bg-black/50 pt-16">
-          <div class="bg-white rounded-xl w-full max-w-[552px] shadow-xl overflow-hidden" data-testid="modal-create-post">
-            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+          <div class="bg-white rounded-card w-full max-w-[552px] shadow-md overflow-hidden" data-testid="modal-create-post">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-border">
               <h2 class="font-semibold text-gray-900 text-lg">{{ editingPost() ? 'Edit post' : 'Create a post' }}</h2>
               <button (click)="closePostModal()" class="p-1 hover:bg-gray-100 rounded-full cursor-pointer">
                 <svg class="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
@@ -448,31 +507,181 @@ import { timeAgo } from '../../services/utils';
               @if (postImagePreview()) {
                 <div class="relative mt-2 border border-gray-200 rounded overflow-hidden max-h-[200px] bg-gray-50 flex items-center justify-center">
                   <img [src]="postImagePreview()!" class="max-h-[200px] object-contain w-full" alt="Post Image Preview" />
-                  <button (click)="removePostImage()" class="absolute top-2 right-2 bg-black/75 hover:bg-black/90 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs focus:outline-none cursor-pointer">
-                    ✕
+                  <button (click)="removePostImage()" class="absolute top-2 right-2 bg-black/60 hover:bg-black/85 text-white p-1 rounded-full cursor-pointer shadow">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                  </button>
+                </div>
+              }
+
+              <!-- Video Attachment Preview inside Modal -->
+              @if (postVideoPreview()) {
+                <div class="relative mt-2 border border-gray-200 rounded overflow-hidden max-h-[240px] bg-gray-50 flex items-center justify-center">
+                  <video [src]="postVideoPreview()!" controls class="max-h-[240px] w-full"></video>
+                  <button (click)="removePostVideo()" class="absolute top-2 right-2 bg-black/60 hover:bg-black/85 text-white p-1 rounded-full cursor-pointer shadow">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                   </button>
                 </div>
               }
             </div>
 
-            <div class="px-6 py-3 border-t border-gray-200 flex items-center justify-between">
-              <!-- Upload Action Icons -->
-              <div class="flex items-center gap-1">
+            <!-- Footer Action row -->
+            <div class="flex items-center justify-between px-6 py-3 border-t border-border bg-gray-50/50">
+              <div class="flex items-center gap-3">
+                <!-- Add image button file trigger -->
                 <input type="file" #modalImageInput (change)="onUploadPostImage($event)" class="hidden" accept="image/*" />
-                <button (click)="modalImageInput.click()" title="Add Photo" class="p-2 rounded-full hover:bg-gray-100 text-gray-600 hover:text-gray-900 cursor-pointer">
-                  <svg class="w-5 h-5 text-[#378FE9]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                <button (click)="modalImageInput.click()" class="text-gray-500 hover:text-gray-800 p-2 hover:bg-gray-100 rounded-full cursor-pointer transition-colors" title="Add Photo">
+                  <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                 </button>
-                <button title="Mock Attachment Option" class="p-2 rounded-full hover:bg-gray-100 text-gray-600 hover:text-gray-900">
-                  <svg class="w-5 h-5 text-[#C37D16]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+
+                <!-- Add video button file trigger -->
+                <input type="file" #modalVideoInput (change)="onUploadPostVideo($event)" class="hidden" accept="video/*" />
+                <button (click)="modalVideoInput.click()" class="text-gray-500 hover:text-gray-800 p-2 hover:bg-gray-100 rounded-full cursor-pointer transition-colors" title="Add Video">
+                  <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
                 </button>
               </div>
+
               <button
                 (click)="submitPost()"
-                [disabled]="!postContent.trim() && !postImagePreview()"
+                [disabled]="!postContent.trim() && !postImagePreview() && !postVideoPreview()"
                 data-testid="button-post-submit"
-                class="bg-[#0A66C2] hover:bg-[#004182] disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold text-sm rounded-full px-5 py-1.5 transition-colors cursor-pointer"
+                class="bg-[#0A66C2] hover:bg-[#004182] disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed text-white font-semibold text-sm rounded-full px-5 py-1.5 transition-colors cursor-pointer"
               >
                 {{ editingPost() ? 'Save' : 'Post' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- 4. INTERACTIVE GAME MODAL -->
+      @if (showGameModal()) {
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-200" (click)="closeGameModal()">
+          <div class="bg-white rounded-xl border border-gray-200 shadow-2xl w-full max-w-[460px] p-6 relative overflow-hidden" (click)="$event.stopPropagation()">
+            <button (click)="closeGameModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 rounded-full p-1.5 hover:bg-hover-bg transition-colors focus:outline-none">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+
+            <div class="text-center pb-4 border-b border-gray-100 font-sans">
+              <h2 class="text-xl font-bold text-gray-900 flex items-center justify-center gap-2">
+                <span>{{ currentGame() }}</span>
+              </h2>
+              <p class="text-xs text-gray-500 mt-1">Wind down with a quick challenge</p>
+            </div>
+
+            <!-- SUDOKU GAME GRID -->
+            @if (currentGame().includes('Sudoku')) {
+              <div class="py-6 flex flex-col items-center">
+                <p class="text-xs text-gray-600 mb-4 text-center font-sans">Fill the grid so every row, column, and 2x2 box contains numbers 1-4. Click a cell to change its value.</p>
+                <div class="grid grid-cols-4 gap-2 w-64 h-64 bg-gray-100 p-2 rounded-lg border border-gray-300">
+                  @for (row of [0, 1, 2, 3]; track row) {
+                    @for (col of [0, 1, 2, 3]; track col) {
+                      @let val = sudokuGrid()[row][col];
+                      @let isOriginal = isOriginalSudokuCell(row, col);
+                      <button
+                        (click)="cycleSudokuCell(row, col)"
+                        [disabled]="isOriginal"
+                        class="w-full h-full text-lg font-bold rounded flex items-center justify-center transition-all cursor-pointer select-none border border-gray-300 font-sans"
+                        [class.bg-white]="!isOriginal && val === 0"
+                        [class.bg-[#E8F0FE]]="isOriginal"
+                        [class.text-gray-800]="isOriginal"
+                        [class.bg-blue-50]="!isOriginal && val > 0"
+                        [class.text-[#0A66C2]]="!isOriginal && val > 0"
+                        [class.hover:bg-blue-100]="!isOriginal"
+                        [class.border-blue-300]="isOriginal"
+                      >
+                        {{ val > 0 ? val : '' }}
+                      </button>
+                    }
+                  }
+                </div>
+
+                @if (gameStatus() === 'won') {
+                  <div class="mt-6 text-center space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <span class="text-3xl">🎉</span>
+                    <p class="text-sm font-bold text-green-700 font-sans">Congratulations! Game Solved!</p>
+                    <p class="text-xs text-gray-500 font-sans">You completed Mini Sudoku #299 successfully!</p>
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- PATCHES GAME GRID -->
+            @if (currentGame().includes('Patches')) {
+              <div class="py-6 flex flex-col items-center">
+                <p class="text-xs text-gray-600 mb-4 text-center font-sans">Group the words into 2 categories of 4 related items. Click 4 words and they will be verified.</p>
+                
+                <div class="grid grid-cols-2 gap-2.5 w-full max-w-[380px]">
+                  @for (w of patchesWords(); track w.text) {
+                    <button
+                      (click)="selectPatchesWord(w)"
+                      [disabled]="w.grouped"
+                      class="py-3 px-2 text-xs font-semibold rounded border text-center transition-all cursor-pointer font-sans"
+                      [class.bg-gray-100]="!w.selected && !w.grouped"
+                      [class.text-gray-800]="!w.selected && !w.grouped"
+                      [class.border-gray-300]="!w.selected && !w.grouped"
+                      [class.bg-blue-600]="w.selected && !w.grouped"
+                      [class.text-white]="w.selected && !w.grouped"
+                      [class.border-blue-700]="w.selected && !w.grouped"
+                      [class.bg-green-100]="w.grouped"
+                      [class.text-green-800]="w.grouped"
+                      [class.border-green-300]="w.grouped"
+                    >
+                      {{ w.text }}
+                    </button>
+                  }
+                </div>
+
+                @if (gameStatus() === 'won') {
+                  <div class="mt-6 text-center space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <span class="text-3xl">🎉</span>
+                    <p class="text-sm font-bold text-green-700 font-sans">Success! Categories Grouped!</p>
+                    <p class="text-xs text-gray-600 font-sans mt-2">
+                      💻 Tech: Angular, TypeScript, RxJS, Signal <br/>
+                      🌲 Nature: Forest, River, Mountain, Valley
+                    </p>
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- ZIP GAME GRID -->
+            @if (currentGame().includes('Zip')) {
+              <div class="py-6 flex flex-col items-center font-sans">
+                <p class="text-xs text-gray-600 mb-4 text-center">Click the numbers in sequential order from 1 to 8 as fast as you can to zip the path!</p>
+                
+                <div class="grid grid-cols-3 gap-3 w-64 h-64 bg-gray-50 p-2 rounded-lg border border-gray-200">
+                  @for (item of zipNumbers(); track item.num) {
+                    <button
+                      (click)="clickZipNumber(item)"
+                      [disabled]="item.clicked"
+                      class="w-full h-full text-base font-bold rounded-lg border border-gray-300 transition-all cursor-pointer font-sans"
+                      [class.bg-white]="!item.clicked"
+                      [class.text-gray-800]="!item.clicked"
+                      [class.bg-green-600]="item.clicked"
+                      [class.text-white]="item.clicked"
+                      [class.border-green-700]="item.clicked"
+                      [class.hover:bg-gray-100]="!item.clicked"
+                    >
+                      {{ item.num }}
+                    </button>
+                  }
+                </div>
+
+                @if (gameStatus() === 'won') {
+                  <div class="mt-6 text-center space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <span class="text-3xl">⚡</span>
+                    <p class="text-sm font-bold text-green-700 font-sans">Zip path completed!</p>
+                    <p class="text-xs text-gray-500 font-sans">You successfully connected all points in order!</p>
+                  </div>
+                } @else {
+                  <p class="text-xs text-gray-500 font-sans mt-4">Next number to find: <span class="font-bold text-[#0A66C2] text-sm">{{ nextZipNum() }}</span></p>
+                }
+              </div>
+            }
+
+            <div class="mt-4 pt-4 border-t border-gray-100 flex justify-end">
+              <button (click)="closeGameModal()" class="bg-[#0A66C2] hover:bg-[#004182] text-white text-xs font-semibold px-5 py-2 rounded-full cursor-pointer border-0 font-sans">
+                Close
               </button>
             </div>
           </div>
@@ -499,6 +708,34 @@ export class FeedComponent {
   editingPost = signal<Post | null>(null);
   postContent = '';
   postImagePreview = signal<string | null>(null);
+  postVideoPreview = signal<string | null>(null);
+
+  // Games state signals
+  showGameModal = signal<boolean>(false);
+  currentGame = signal<string>('');
+  gameStatus = signal<'playing' | 'won'>('playing');
+  sudokuGrid = signal<number[][]>([[1, 0, 0, 4], [0, 4, 1, 0], [0, 1, 4, 0], [4, 0, 0, 1]]);
+  patchesWords = signal<{ text: string; category: string; selected: boolean; grouped: boolean }[]>([]);
+  zipNumbers = signal<{ num: number; clicked: boolean }[]>([]);
+  nextZipNum = signal<number>(1);
+
+  sudokuSolution = [
+    [1, 2, 3, 4],
+    [3, 4, 1, 2],
+    [2, 1, 4, 3],
+    [4, 3, 2, 1]
+  ];
+
+  initialPatchesWords = [
+    { text: 'Angular', category: 'Tech', selected: false, grouped: false },
+    { text: 'TypeScript', category: 'Tech', selected: false, grouped: false },
+    { text: 'RxJS', category: 'Tech', selected: false, grouped: false },
+    { text: 'Signal', category: 'Tech', selected: false, grouped: false },
+    { text: 'Forest', category: 'Nature', selected: false, grouped: false },
+    { text: 'River', category: 'Nature', selected: false, grouped: false },
+    { text: 'Mountain', category: 'Nature', selected: false, grouped: false },
+    { text: 'Valley', category: 'Nature', selected: false, grouped: false }
+  ];
 
   reactions = [
     { emoji: "👍", label: "Like" },
@@ -617,11 +854,17 @@ export class FeedComponent {
     this.editingPost.set(null);
     this.postContent = '';
     this.postImagePreview.set(null);
+    this.postVideoPreview.set(null);
     this.showPostModal.set(true);
   }
 
   openPostModalWithImagePreloaded() {
-    // Modal is opened, the preview was already set by the change listener
+    this.postVideoPreview.set(null);
+    this.showPostModal.set(true);
+  }
+
+  openPostModalWithVideoPreloaded() {
+    this.postImagePreview.set(null);
     this.showPostModal.set(true);
   }
 
@@ -629,6 +872,7 @@ export class FeedComponent {
     this.editingPost.set(post);
     this.postContent = post.content;
     this.postImagePreview.set(post.image || null);
+    this.postVideoPreview.set(post.video || null);
     this.showPostModal.set(true);
   }
 
@@ -637,15 +881,17 @@ export class FeedComponent {
     this.editingPost.set(null);
     this.postContent = '';
     this.postImagePreview.set(null);
+    this.postVideoPreview.set(null);
   }
 
   submitPost() {
     const editing = this.editingPost();
     const image = this.postImagePreview() || undefined;
+    const video = this.postVideoPreview() || undefined;
     if (editing) {
-      this.stateService.editPost(editing.id, this.postContent.trim(), image);
+      this.stateService.editPost(editing.id, this.postContent.trim(), image, video);
     } else {
-      this.stateService.createPost(this.postContent.trim(), image);
+      this.stateService.createPost(this.postContent.trim(), image, video);
     }
     this.closePostModal();
   }
@@ -680,11 +926,149 @@ export class FeedComponent {
     reader.onload = () => {
       const base64 = reader.result as string;
       this.postImagePreview.set(base64);
+      this.postVideoPreview.set(null);
     };
     reader.readAsDataURL(file);
   }
 
   removePostImage() {
     this.postImagePreview.set(null);
+  }
+
+  onUploadPostVideo(event: any) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result as string;
+      this.postVideoPreview.set(base64);
+      this.postImagePreview.set(null);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  removePostVideo() {
+    this.postVideoPreview.set(null);
+  }
+
+  // Games methods
+  isOriginalSudokuCell(row: number, col: number): boolean {
+    const originalMask = [
+      [true, false, false, true],
+      [false, true, true, false],
+      [false, true, true, false],
+      [true, false, false, true]
+    ];
+    return originalMask[row][col];
+  }
+
+  cycleSudokuCell(row: number, col: number) {
+    if (this.isOriginalSudokuCell(row, col) || this.gameStatus() === 'won') return;
+    const currentGrid = this.sudokuGrid().map(r => [...r]);
+    const current = currentGrid[row][col];
+    let nextVal = 0;
+    if (current === 0) nextVal = 1;
+    else if (current === 1) nextVal = 2;
+    else if (current === 2) nextVal = 3;
+    else if (current === 3) nextVal = 4;
+    else if (current === 4) nextVal = 0;
+    currentGrid[row][col] = nextVal;
+    this.sudokuGrid.set(currentGrid);
+    this.checkSudokuWin();
+  }
+
+  checkSudokuWin() {
+    const grid = this.sudokuGrid();
+    for (let r = 0; r < 4; r++) {
+      for (let c = 0; c < 4; c++) {
+        if (grid[r][c] !== this.sudokuSolution[r][c]) {
+          return;
+        }
+      }
+    }
+    this.gameStatus.set('won');
+  }
+
+  selectPatchesWord(word: any) {
+    if (word.grouped || this.gameStatus() === 'won') return;
+    
+    const words = this.patchesWords().map(w => w.text === word.text ? { ...w, selected: !w.selected } : w);
+    this.patchesWords.set(words);
+
+    const selectedWords = words.filter(w => w.selected);
+    if (selectedWords.length === 4) {
+      const allInSameCategory = selectedWords.every(w => w.category === selectedWords[0].category);
+      if (allInSameCategory) {
+        setTimeout(() => {
+          const groupedWords = this.patchesWords().map(w => {
+            if (w.selected) {
+              return { ...w, selected: false, grouped: true };
+            }
+            return w;
+          });
+          this.patchesWords.set(groupedWords);
+          
+          if (groupedWords.every(w => w.grouped)) {
+            this.gameStatus.set('won');
+          }
+        }, 300);
+      } else {
+        setTimeout(() => {
+          const resetWords = this.patchesWords().map(w => {
+            if (w.selected) {
+              return { ...w, selected: false };
+            }
+            return w;
+          });
+          this.patchesWords.set(resetWords);
+        }, 500);
+      }
+    }
+  }
+
+  clickZipNumber(item: any) {
+    if (item.clicked || this.gameStatus() === 'won') return;
+    if (item.num === this.nextZipNum()) {
+      const updated = this.zipNumbers().map(z => z.num === item.num ? { ...z, clicked: true } : z);
+      this.zipNumbers.set(updated);
+      this.nextZipNum.set(this.nextZipNum() + 1);
+      if (this.nextZipNum() > 8) {
+        this.gameStatus.set('won');
+      }
+    }
+  }
+
+  openGame(gameName: string): void {
+    this.currentGame.set(gameName);
+    this.gameStatus.set('playing');
+    if (gameName.includes('Sudoku')) {
+      this.sudokuGrid.set([
+        [1, 0, 0, 4],
+        [0, 4, 1, 0],
+        [0, 1, 4, 0],
+        [4, 0, 0, 1]
+      ]);
+    } else if (gameName.includes('Patches')) {
+      const words = this.initialPatchesWords.map(w => ({ ...w, selected: false, grouped: false }));
+      this.patchesWords.set(this.shuffleArray(words));
+    } else if (gameName.includes('Zip')) {
+      const nums = [1, 2, 3, 4, 5, 6, 7, 8].map(n => ({ num: n, clicked: false }));
+      this.zipNumbers.set(this.shuffleArray(nums));
+      this.nextZipNum.set(1);
+    }
+    this.showGameModal.set(true);
+  }
+
+  closeGameModal(): void {
+    this.showGameModal.set(false);
+  }
+
+  shuffleArray(array: any[]): any[] {
+    const arr = [...array];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
   }
 }

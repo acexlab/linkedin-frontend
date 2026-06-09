@@ -201,7 +201,7 @@ import { timeAgo } from '../../services/utils';
               @if (!isChatMinimized(chatId)) {
                 <div class="chat-window-body flex-1 flex flex-col bg-white overflow-hidden">
                   <!-- Messages area -->
-                  <div #chatScroll class="messages-area flex-1 p-3 overflow-y-auto space-y-2.5 bg-gray-50/50">
+                  <div #chatScroll class="messages-area flex flex-col flex-1 p-3 overflow-y-auto space-y-2.5 bg-gray-50/50">
                     @for (msg of conv.messages; track msg.id) {
                       <div 
                         class="flex flex-col max-w-[85%]"

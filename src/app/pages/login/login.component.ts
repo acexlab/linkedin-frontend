@@ -54,14 +54,14 @@ declare var google: any;
           <div class="flex items-center gap-3">
             <button
               (click)="openRegisterModal()"
-              class="text-gray-600 hover:bg-gray-100 hover:text-gray-900 font-semibold text-base rounded-full px-5 py-2.5 transition-colors focus:outline-none"
+              class="text-secondary hover:bg-hover-bg hover:text-foreground font-semibold text-base rounded-button px-5 py-2.5 transition-colors focus:outline-none"
             >
               Join now
             </button>
             <button
               (click)="openLoginModal()"
               data-testid="button-sign-in"
-              class="border border-[#0A66C2] text-[#0A66C2] hover:bg-blue-50 font-semibold text-base rounded-full px-5 py-2 transition-colors focus:outline-none"
+              class="border border-primary text-primary hover:bg-primary/5 font-semibold text-base rounded-button px-5 py-2 transition-colors focus:outline-none"
             >
               Sign in
             </button>
@@ -121,7 +121,7 @@ declare var google: any;
             </h2>
             <button
               (click)="openMockModal('Post a Job')"
-              class="border border-[#0A66C2] text-[#0A66C2] hover:bg-blue-50 font-semibold text-base rounded-full px-6 py-2.5 transition-colors focus:outline-none mt-2"
+              class="border border-primary text-primary hover:bg-primary/5 font-semibold text-base rounded-button px-6 py-2.5 transition-colors focus:outline-none mt-2"
             >
               Post a job
             </button>
@@ -138,7 +138,7 @@ declare var google: any;
             </h3>
             <button
               (click)="openMockModal('Find people')"
-              class="border border-gray-600 hover:border-gray-800 text-gray-700 hover:bg-gray-50 font-semibold text-base rounded-full px-6 py-2 transition-colors focus:outline-none"
+              class="border border-secondary text-secondary hover:bg-hover-bg font-semibold text-base rounded-button px-6 py-2 transition-colors focus:outline-none"
             >
               Find people you know
             </button>
@@ -180,16 +180,8 @@ declare var google: any;
               
               <!-- Stack of sign in options -->
               <div class="space-y-3 max-w-[380px]">
-                <!-- Gmail SSO Button -->
-                <button
-                  (click)="onGmailLogin()"
-                  class="w-full border border-gray-300 hover:border-gray-400 bg-white text-gray-700 font-semibold text-sm rounded-full py-2.5 px-4 flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors shadow-sm focus:outline-none cursor-pointer"
-                >
-                  <svg class="w-4 h-4" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" fill="#EA4335"/>
-                  </svg>
-                  <span>Continue with Gmail</span>
-                </button>
+                <!-- Google Sign-In Button Target -->
+                <div id="googleBtnHero" class="w-full flex justify-center"></div>
               </div>
 
               <p class="text-xs text-gray-500 max-w-[380px] leading-relaxed">
@@ -308,8 +300,8 @@ declare var google: any;
       <!-- 1. SIGN IN MODAL -->
       @if (showLoginModal()) {
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-200" (click)="closeModals()">
-          <div class="bg-white rounded-xl shadow-2xl w-full max-w-[400px] p-8 relative overflow-hidden" (click)="$event.stopPropagation()" data-testid="modal-login">
-            <button (click)="closeModals()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 rounded-full p-1.5 hover:bg-gray-100 transition-colors focus:outline-none">
+          <div class="bg-white rounded-card border border-border shadow-md w-full max-w-[400px] p-8 relative overflow-hidden" (click)="$event.stopPropagation()" data-testid="modal-login">
+            <button (click)="closeModals()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 rounded-full p-1.5 hover:bg-hover-bg transition-colors focus:outline-none">
               <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
 
@@ -322,22 +314,76 @@ declare var google: any;
               </div>
             }
 
-            <!-- Gmail SSO Button -->
-            <button
-              (click)="onGmailLogin()"
-              class="w-full border border-gray-300 hover:border-gray-400 bg-white text-gray-700 font-semibold text-sm rounded-full py-2.5 px-4 flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors shadow-sm focus:outline-none mb-3 cursor-pointer animate-in fade-in duration-200"
-            >
-              <svg class="w-4 h-4" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" fill="#EA4335"/>
-              </svg>
-              <span>Continue with Gmail</span>
-            </button>
+            @if (otpRequired()) {
+              <form [formGroup]="otpForm" (ngSubmit)="onSubmitOtp()" class="space-y-4 mb-4">
+                <div class="bg-blue-50 border border-blue-200 text-[#0A66C2] text-xs rounded px-3 py-2.5">
+                  A verification code has been sent to {{ otpEmail() }}.
+                </div>
+                <div>
+                  <label class="text-gray-700 text-xs font-semibold block mb-1">Verification Code</label>
+                  <input
+                    type="text"
+                    formControlName="code"
+                    class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#0A66C2] focus:ring-1 focus:ring-[#0A66C2]"
+                    placeholder="Enter 6-digit code"
+                    maxlength="6"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  [disabled]="otpForm.invalid"
+                  class="w-full bg-[#0A66C2] hover:bg-[#004182] disabled:bg-gray-300 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-full py-2.5 transition-colors cursor-pointer"
+                >
+                  Verify Code
+                </button>
+              </form>
+            } @else {
+              <!-- Email / Password Login Form -->
+              <form [formGroup]="loginForm" (ngSubmit)="onSubmitLogin()" class="space-y-4 mb-4">
+                <div>
+                  <label class="text-gray-700 text-xs font-semibold block mb-1">Email</label>
+                  <input
+                    type="email"
+                    formControlName="email"
+                    class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#0A66C2] focus:ring-1 focus:ring-[#0A66C2]"
+                    placeholder="Email address"
+                    data-testid="input-login-email"
+                  />
+                </div>
+                
+                <div>
+                  <div class="flex justify-between items-center mb-1">
+                    <label class="text-gray-700 text-xs font-semibold block">Password</label>
+                    <a routerLink="/forgot-password" (click)="closeModals()" class="text-xs text-[#0A66C2] hover:underline font-semibold focus:outline-none">Forgot password?</a>
+                  </div>
+                  <input
+                    type="password"
+                    formControlName="password"
+                    class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#0A66C2] focus:ring-1 focus:ring-[#0A66C2]"
+                    placeholder="Password"
+                    data-testid="input-login-password"
+                  />
+                </div>
 
-            <div class="flex items-center gap-3 my-4">
-              <hr class="flex-1 border-gray-200" />
-              <span class="text-gray-400 text-xs">or</span>
-              <hr class="flex-1 border-gray-200" />
-            </div>
+                <button
+                  type="submit"
+                  [disabled]="loginForm.invalid"
+                  class="w-full bg-[#0A66C2] hover:bg-[#004182] disabled:bg-gray-300 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-full py-2.5 transition-colors cursor-pointer"
+                  data-testid="button-login-submit"
+                >
+                  Sign in
+                </button>
+              </form>
+
+              <div class="flex items-center gap-3 my-4">
+                <hr class="flex-1 border-gray-200" />
+                <span class="text-gray-400 text-xs">or</span>
+                <hr class="flex-1 border-gray-200" />
+              </div>
+
+              <!-- Google Sign-In Button Target -->
+              <div id="googleBtnModal" class="w-full flex justify-center mb-3"></div>
+            }
 
             <p class="text-center text-sm text-gray-600">
               New to LinkedIn? 
@@ -350,8 +396,8 @@ declare var google: any;
       <!-- 2. REGISTER / JOIN NOW MODAL -->
       @if (showRegisterModal()) {
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-200" (click)="closeModals()">
-          <div class="bg-white rounded-xl shadow-2xl w-full max-w-[400px] p-8 relative overflow-hidden" (click)="$event.stopPropagation()">
-            <button (click)="closeModals()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 rounded-full p-1.5 hover:bg-gray-100 transition-colors focus:outline-none">
+          <div class="bg-white rounded-card border border-border shadow-md w-full max-w-[400px] p-8 relative overflow-hidden" (click)="$event.stopPropagation()">
+            <button (click)="closeModals()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 rounded-full p-1.5 hover:bg-hover-bg transition-colors focus:outline-none">
               <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
 
@@ -364,7 +410,40 @@ declare var google: any;
               </div>
             }
 
-            <form [formGroup]="registerForm" class="space-y-4">
+            <form [formGroup]="registerForm" (ngSubmit)="onSubmitRegister()" class="space-y-4">
+              <!-- Full name -->
+              <div>
+                <label class="text-gray-700 text-xs font-semibold block mb-1">Full name</label>
+                <input
+                  type="text"
+                  formControlName="name"
+                  class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#0A66C2] focus:ring-1 focus:ring-[#0A66C2]"
+                  placeholder="First and last name"
+                />
+              </div>
+
+              <!-- Email -->
+              <div>
+                <label class="text-gray-700 text-xs font-semibold block mb-1">Email</label>
+                <input
+                  type="email"
+                  formControlName="email"
+                  class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#0A66C2] focus:ring-1 focus:ring-[#0A66C2]"
+                  placeholder="Email address"
+                />
+              </div>
+
+              <!-- Password -->
+              <div>
+                <label class="text-gray-700 text-xs font-semibold block mb-1">Password (6+ characters)</label>
+                <input
+                  type="password"
+                  formControlName="password"
+                  class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#0A66C2] focus:ring-1 focus:ring-[#0A66C2]"
+                  placeholder="Password"
+                />
+              </div>
+
               <!-- Join As -->
               <div>
                 <label class="text-gray-700 text-xs font-semibold block mb-1">Join as</label>
@@ -377,17 +456,22 @@ declare var google: any;
                 </select>
               </div>
 
-              <!-- Gmail SSO Button -->
               <button
-                type="button"
-                (click)="onGmailLogin()"
-                class="w-full border border-gray-300 hover:border-gray-400 bg-white text-gray-700 font-semibold text-sm rounded-full py-2.5 px-4 flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors shadow-sm focus:outline-none cursor-pointer"
+                type="submit"
+                [disabled]="registerForm.invalid"
+                class="w-full bg-[#0A66C2] hover:bg-[#004182] disabled:bg-gray-300 text-white text-sm font-semibold rounded-full py-2.5 transition-colors cursor-pointer"
               >
-                <svg class="w-4 h-4" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" fill="#EA4335"/>
-                </svg>
-                <span>Continue with Gmail</span>
+                Agree & Join
               </button>
+
+              <div class="flex items-center gap-3 my-4">
+                <hr class="flex-1 border-gray-200" />
+                <span class="text-gray-400 text-xs">or</span>
+                <hr class="flex-1 border-gray-200" />
+              </div>
+
+              <!-- Google Sign-In Button Target -->
+              <div id="googleBtnRegisterModal" class="w-full flex justify-center"></div>
             </form>
 
             <div class="flex items-center gap-3 my-4">

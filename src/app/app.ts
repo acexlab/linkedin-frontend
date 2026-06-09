@@ -22,6 +22,15 @@ export class App {
     effect(() => {
       const user = this.currentUser();
       if (user) {
+        // Onboarding check
+        if (this.stateService.needsOnboarding()) {
+          const url = this.router.url;
+          if (!url.startsWith('/profile/') || !url.includes('setup=true')) {
+            this.router.navigate(['/profile', user.id], { queryParams: { setup: 'true' } });
+            return;
+          }
+        }
+
         const url = this.router.url;
         if (user.role === 'admin' && !url.startsWith('/admin')) {
           this.router.navigate(['/admin']);

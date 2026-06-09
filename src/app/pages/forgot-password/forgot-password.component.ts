@@ -15,7 +15,7 @@ import { StateService } from '../../services/state.service';
           <div class="w-9 h-9 bg-[#0A66C2] rounded flex items-center justify-center transform hover:scale-105 transition-transform">
             <span class="text-white font-bold text-lg italic">in</span>
           </div>
-          <span class="text-xl font-bold text-gray-800 tracking-wide">ProLink</span>
+          <span class="text-xl font-bold text-gray-800 tracking-wide">LinkedIn</span>
         </div>
       </header>
 

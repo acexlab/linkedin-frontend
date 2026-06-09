@@ -1,7 +1,7 @@
 import { HttpInterceptorFn } from '@angular/common/http';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  const token = localStorage.getItem('prolink_token');
+  const token = localStorage.getItem('linkedin_token');
   
   if (token) {
     const cloned = req.clone({
@@ -14,3 +14,4 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   
   return next(req);
 };
+

@@ -37,6 +37,55 @@ import { User, Experience, Education } from '../../services/state.types';
               } @else {
                 <span class="text-white font-bold text-3xl">{{ profileUser()?.avatarInitials }}</span>
               }
+              @if (profileUser()?.openToWork || profileUser()?.isHiring) {
+                <svg viewBox="0 0 100 100" class="absolute inset-0 w-full h-full pointer-events-none select-none z-10">
+                  <defs>
+                    <!-- Paths when ONLY one badge is active -->
+                    <!-- #OPENTOWORK (Bottom-Left) -->
+                    <path id="arcOpenOnly" d="M 12,28 A 44,44 0 0,0 78,84" />
+                    <path id="textArcOpenOnly" d="M 14.5,29.5 A 40,40 0 0,0 74.5,80.5" />
+                    
+                    <!-- #HIRING (Bottom-Right) -->
+                    <path id="arcHiringOnly" d="M 22,84 A 44,44 0 0,0 88,28" />
+                    <path id="textArcHiringOnly" d="M 24.5,80.5 A 40,40 0 0,0 84.5,29.5" />
+                    
+                    <!-- Paths when BOTH badges are active -->
+                    <!-- #OPENTOWORK (Left-Half) -->
+                    <path id="arcOpenBoth" d="M 24.8,14 A 44,44 0 0,0 24.8,86" />
+                    <path id="textArcOpenBoth" d="M 27,17.2 A 40,40 0 0,0 27,82.8" />
+                    
+                    <!-- #HIRING (Right-Half) -->
+                    <path id="arcHiringBoth" d="M 75.2,86 A 44,44 0 0,0 75.2,14" />
+                    <path id="textArcHiringBoth" d="M 73,82.8 A 40,40 0 0,0 73,17.2" />
+                  </defs>
+
+                  @if (profileUser()?.openToWork && profileUser()?.isHiring) {
+                    <!-- #OPENTOWORK (Left) -->
+                    <use href="#arcOpenBoth" fill="none" stroke="#057642" stroke-width="12" />
+                    <text fill="white" font-size="5.2" font-weight="900" letter-spacing="0.6" font-family="system-ui, sans-serif">
+                      <textPath href="#textArcOpenBoth" startOffset="50%" text-anchor="middle">#OPENTOWORK</textPath>
+                    </text>
+
+                    <!-- #HIRING (Right) -->
+                    <use href="#arcHiringBoth" fill="none" stroke="#7A15F7" stroke-width="12" />
+                    <text fill="white" font-size="5.2" font-weight="900" letter-spacing="0.6" font-family="system-ui, sans-serif">
+                      <textPath href="#textArcHiringBoth" startOffset="50%" text-anchor="middle">#HIRING</textPath>
+                    </text>
+                  }
+                  @else if (profileUser()?.openToWork) {
+                    <use href="#arcOpenOnly" fill="none" stroke="#057642" stroke-width="12" />
+                    <text fill="white" font-size="5.2" font-weight="900" letter-spacing="0.6" font-family="system-ui, sans-serif">
+                      <textPath href="#textArcOpenOnly" startOffset="50%" text-anchor="middle">#OPENTOWORK</textPath>
+                    </text>
+                  }
+                  @else if (profileUser()?.isHiring) {
+                    <use href="#arcHiringOnly" fill="none" stroke="#7A15F7" stroke-width="12" />
+                    <text fill="white" font-size="5.2" font-weight="900" letter-spacing="0.6" font-family="system-ui, sans-serif">
+                      <textPath href="#textArcHiringOnly" startOffset="50%" text-anchor="middle">#HIRING</textPath>
+                    </text>
+                  }
+                </svg>
+              }
               @if (isOwnProfile()) {
                 <input type="file" #profileAvatarInput (change)="onUploadAvatar($event)" class="hidden" accept="image/*" />
                 <button (click)="profileAvatarInput.click()" class="absolute inset-0 bg-black/40 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs font-semibold cursor-pointer">
@@ -136,9 +185,12 @@ import { User, Experience, Education } from '../../services/state.types';
 
           <!-- Open To Work / CTA additions -->
           @if (isOwnProfile()) {
-            <div class="mt-3 flex items-center gap-2">
+            <div class="mt-3 flex items-center gap-2 flex-wrap">
               <button (click)="toggleOpenToWork()" class="border border-[#0A66C2] text-[#0A66C2] text-sm font-semibold rounded-full px-4 py-1.5 hover:bg-blue-50 transition-colors">
                 {{ profileUser()?.openToWork ? 'Disable #OpenToWork' : 'Enable #OpenToWork' }}
+              </button>
+              <button (click)="toggleIsHiring()" class="border border-[#7A15F7] text-[#7A15F7] text-sm font-semibold rounded-full px-4 py-1.5 hover:bg-purple-50 transition-colors">
+                {{ profileUser()?.isHiring ? 'Disable #Hiring' : 'Enable #Hiring' }}
               </button>
               <button class="border border-gray-400 text-gray-700 text-sm font-semibold rounded-full px-4 py-1.5 hover:bg-gray-100 transition-colors">
                 Add profile section
@@ -999,6 +1051,197 @@ import { User, Experience, Education } from '../../services/state.types';
           </div>
         </div>
       }
+
+      <!-- ONBOARDING MODAL OVERLAY -->
+      @if (showOnboardingModal() && currentUser()) {
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
+          <div class="bg-white rounded-xl w-full max-w-[600px] shadow-2xl overflow-hidden max-h-[90vh] flex flex-col animate-in fade-in zoom-in-95 duration-200">
+            <!-- Header -->
+            <div class="flex items-center justify-between px-6 py-5 border-b border-gray-150 bg-white">
+              <div>
+                <h2 class="font-bold text-gray-900 text-xl">Welcome to LinkedIn!</h2>
+                <p class="text-xs text-gray-500 mt-0.5">Let's set up your profile so connections can find you.</p>
+              </div>
+              <div class="flex items-center gap-1.5 bg-[#F3F2EF] px-3 py-1 rounded-full text-xs font-semibold text-gray-700">
+                Step {{ onboardingStep() }} of 3
+              </div>
+            </div>
+
+            <!-- Content Area (Scrollable) -->
+            <div class="flex-1 overflow-y-auto px-6 py-5 space-y-6">
+              
+              <!-- STEP 1: BASIC INFO -->
+              @if (onboardingStep() === 1) {
+                <div class="space-y-4">
+                  <h3 class="text-base font-semibold text-gray-900 border-b border-gray-100 pb-1.5">Verify your details</h3>
+                  
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label class="text-xs font-semibold text-gray-700 block mb-1">First name*</label>
+                      <input
+                        [(ngModel)]="onboardingFirstName"
+                        class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:border-[#0A66C2] focus:outline-none"
+                        placeholder="e.g. John"
+                      />
+                    </div>
+                    <div>
+                      <label class="text-xs font-semibold text-gray-700 block mb-1">Last name*</label>
+                      <input
+                        [(ngModel)]="onboardingLastName"
+                        class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:border-[#0A66C2] focus:outline-none"
+                        placeholder="e.g. Doe"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label class="text-xs font-semibold text-gray-700 block mb-1">Headline*</label>
+                    <input
+                      [(ngModel)]="onboardingHeadline"
+                      class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:border-[#0A66C2] focus:outline-none"
+                      placeholder="e.g. Software Engineer Student, Project Manager"
+                    />
+                    <p class="text-[10px] text-gray-400 mt-1">Brief summary of your professional background.</p>
+                  </div>
+
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label class="text-xs font-semibold text-gray-700 block mb-1">City*</label>
+                      <input
+                        [(ngModel)]="onboardingLocationCity"
+                        class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:border-[#0A66C2] focus:outline-none"
+                        placeholder="e.g. Kochi"
+                      />
+                    </div>
+                    <div>
+                      <label class="text-xs font-semibold text-gray-700 block mb-1">Country*</label>
+                      <input
+                        [(ngModel)]="onboardingLocationCountry"
+                        class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:border-[#0A66C2] focus:outline-none"
+                        placeholder="e.g. India"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label class="text-xs font-semibold text-gray-700 block mb-1">About / Bio</label>
+                    <textarea
+                      [(ngModel)]="onboardingBio"
+                      rows="3"
+                      class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:border-[#0A66C2] focus:outline-none resize-none"
+                      placeholder="Share a short summary about yourself, your skills, or what you are looking for..."
+                    ></textarea>
+                  </div>
+                </div>
+              }
+
+              <!-- STEP 2: EDUCATION -->
+              @if (onboardingStep() === 2) {
+                <div class="space-y-4">
+                  <h3 class="text-base font-semibold text-gray-900 border-b border-gray-100 pb-1.5">Add education</h3>
+                  <p class="text-xs text-gray-500">Adding a school or university helps recruiters find you.</p>
+
+                  <div>
+                    <label class="text-xs font-semibold text-gray-700 block mb-1">School / University*</label>
+                    <input
+                      [(ngModel)]="onboardingSchool"
+                      class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:border-[#0A66C2] focus:outline-none"
+                      placeholder="e.g. Indian Institute of Technology"
+                    />
+                  </div>
+
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label class="text-xs font-semibold text-gray-700 block mb-1">Degree*</label>
+                      <input
+                        [(ngModel)]="onboardingDegree"
+                        class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:border-[#0A66C2] focus:outline-none"
+                        placeholder="e.g. Bachelor's, Master's"
+                      />
+                    </div>
+                    <div>
+                      <label class="text-xs font-semibold text-gray-700 block mb-1">Field of Study*</label>
+                      <input
+                        [(ngModel)]="onboardingField"
+                        class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:border-[#0A66C2] focus:outline-none"
+                        placeholder="e.g. Computer Science, Business"
+                      />
+                    </div>
+                  </div>
+
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label class="text-xs font-semibold text-gray-700 block mb-1">Start Year*</label>
+                      <input
+                        [(ngModel)]="onboardingStartYear"
+                        class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:border-[#0A66C2] focus:outline-none"
+                        placeholder="e.g. 2022"
+                      />
+                    </div>
+                    <div>
+                      <label class="text-xs font-semibold text-gray-700 block mb-1">End Year* (or expected)</label>
+                      <input
+                        [(ngModel)]="onboardingEndYear"
+                        class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:border-[#0A66C2] focus:outline-none"
+                        placeholder="e.g. 2026"
+                      />
+                    </div>
+                  </div>
+                </div>
+              }
+
+              <!-- STEP 3: SKILLS -->
+              @if (onboardingStep() === 3) {
+                <div class="space-y-4">
+                  <h3 class="text-base font-semibold text-gray-900 border-b border-gray-100 pb-1.5">Add professional skills</h3>
+                  <p class="text-xs text-gray-500">List skills that reflect your professional expertise (separated by commas).</p>
+
+                  <div>
+                    <label class="text-xs font-semibold text-gray-700 block mb-1">Skills*</label>
+                    <textarea
+                      [(ngModel)]="onboardingSkillsText"
+                      rows="4"
+                      class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:border-[#0A66C2] focus:outline-none"
+                      placeholder="e.g. Angular, TypeScript, C#, Project Management, SQL"
+                    ></textarea>
+                    <p class="text-[10px] text-gray-400 mt-1.5">Entering skills helps you qualify for jobs matching your profile.</p>
+                  </div>
+                </div>
+              }
+
+            </div>
+
+            <!-- Footer -->
+            <div class="px-6 py-4 border-t border-gray-150 flex justify-between bg-white shrink-0">
+              <button
+                [disabled]="onboardingStep() === 1"
+                (click)="onboardingStep.set(onboardingStep() - 1)"
+                class="border border-gray-400 text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-transparent text-sm font-semibold rounded-full px-5 py-2 transition-colors cursor-pointer"
+              >
+                Back
+              </button>
+              
+              @if (onboardingStep() < 3) {
+                <button
+                  [disabled]="onboardingStep() === 1 ? (!onboardingFirstName || !onboardingLastName || !onboardingHeadline || !onboardingLocationCity || !onboardingLocationCountry) : (!onboardingSchool || !onboardingDegree || !onboardingField || !onboardingStartYear || !onboardingEndYear)"
+                  (click)="onboardingStep.set(onboardingStep() + 1)"
+                  class="bg-[#0A66C2] hover:bg-[#004182] disabled:bg-gray-300 text-white text-sm font-semibold rounded-full px-6 py-2 transition-colors cursor-pointer"
+                >
+                  Next
+                </button>
+              } @else {
+                <button
+                  [disabled]="!onboardingSkillsText"
+                  (click)="saveOnboarding()"
+                  class="bg-[#057642] hover:bg-[#03422a] disabled:bg-gray-300 text-white text-sm font-semibold rounded-full px-6 py-2 transition-colors cursor-pointer"
+                >
+                  Finish & Explore
+                </button>
+              }
+            </div>
+          </div>
+        </div>
+      }
     </div>
   `
 })
@@ -1053,6 +1296,22 @@ export class ProfileComponent {
   showViewContactModal = signal(false);
   showEditContactModal = signal(false);
   showEditSkillsModal = signal(false);
+  showOnboardingModal = signal(false);
+  onboardingStep = signal(1);
+
+  // Onboarding bindings
+  onboardingFirstName = '';
+  onboardingLastName = '';
+  onboardingHeadline = '';
+  onboardingLocationCity = '';
+  onboardingLocationCountry = '';
+  onboardingBio = '';
+  onboardingSchool = '';
+  onboardingDegree = '';
+  onboardingField = '';
+  onboardingStartYear = '';
+  onboardingEndYear = '';
+  onboardingSkillsText = '';
 
   // Edit intro bindings
   editFirstName = '';
@@ -1111,6 +1370,15 @@ export class ProfileComponent {
         }
       });
     });
+
+    this.route.queryParamMap.subscribe((params) => {
+      const setup = params.get('setup');
+      if (setup === 'true') {
+        setTimeout(() => {
+          this.openOnboardingModal();
+        }, 300);
+      }
+    });
   }
 
   handleConnect() {
@@ -1129,6 +1397,10 @@ export class ProfileComponent {
 
   toggleOpenToWork() {
     this.stateService.toggleOpenToWork();
+  }
+
+  toggleIsHiring() {
+    this.stateService.toggleIsHiring();
   }
 
   // Get primary school to show in intro
@@ -1415,5 +1687,91 @@ export class ProfileComponent {
       this.stateService.updateProfile({ coverUrl: base64 });
     };
     reader.readAsDataURL(file);
+  }
+
+  openOnboardingModal() {
+    const user = this.currentUser();
+    if (user) {
+      const nameParts = (user.name || '').trim().split(/\s+/);
+      this.onboardingFirstName = nameParts[0] || '';
+      this.onboardingLastName = nameParts.slice(1).join(' ') || '';
+      this.onboardingHeadline = user.headline && user.headline !== 'Add headline' ? user.headline : '';
+      this.onboardingBio = user.about || '';
+      
+      const loc = user.location && user.location !== 'Add location' ? user.location : '';
+      const parts = loc.split(',').map((p) => p.trim());
+      if (parts.length >= 2) {
+        this.onboardingLocationCountry = parts[parts.length - 1];
+        this.onboardingLocationCity = parts.slice(0, parts.length - 1).join(', ');
+      } else {
+        this.onboardingLocationCountry = loc;
+        this.onboardingLocationCity = '';
+      }
+
+      this.onboardingSchool = '';
+      this.onboardingDegree = '';
+      this.onboardingField = '';
+      this.onboardingStartYear = '';
+      this.onboardingEndYear = '';
+      this.onboardingSkillsText = '';
+      this.onboardingStep.set(1);
+      this.showOnboardingModal.set(true);
+    }
+  }
+
+  async saveOnboarding() {
+    const user = this.currentUser();
+    if (!user) return;
+
+    const firstName = this.onboardingFirstName.trim();
+    const lastName = this.onboardingLastName.trim();
+    const fullName = firstName && lastName ? `${firstName} ${lastName}` : (firstName || lastName);
+    
+    let locationStr = '';
+    const city = this.onboardingLocationCity.trim();
+    const country = this.onboardingLocationCountry.trim();
+    if (city && country) {
+      locationStr = `${city}, ${country}`;
+    } else {
+      locationStr = city || country;
+    }
+
+    // 1. Save basic profile updates
+    this.stateService.updateProfile({
+      name: fullName,
+      headline: this.onboardingHeadline.trim() || 'Professional on LinkedIn',
+      location: locationStr || 'Add location',
+      about: this.onboardingBio.trim()
+    });
+
+    // 2. Add education if specified
+    if (this.onboardingSchool.trim() && this.onboardingDegree.trim()) {
+      const newEdu: Education = {
+        id: 'edu_' + Math.random().toString(36).substr(2, 9),
+        school: this.onboardingSchool.trim(),
+        degree: this.onboardingDegree.trim(),
+        field: this.onboardingField.trim(),
+        startYear: this.onboardingStartYear,
+        endYear: this.onboardingEndYear
+      };
+      this.stateService.updateProfile({ education: [newEdu] });
+    }
+
+    // 3. Add skills if specified
+    if (this.onboardingSkillsText.trim()) {
+      const skillList = this.onboardingSkillsText.split(',')
+        .map(s => s.trim())
+        .filter(s => s.length > 0);
+      if (skillList.length > 0) {
+        this.stateService.updateProfile({ skills: skillList });
+      }
+    }
+
+    // 4. Mark as onboarded locally to prevent redirects
+    localStorage.setItem(`linkedin_onboarded_${user.id}`, 'true');
+
+    // 5. Close wizard and navigate home
+    this.showOnboardingModal.set(false);
+    this.router.navigate(['/']);
   }
 }
