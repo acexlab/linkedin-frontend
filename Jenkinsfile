@@ -34,7 +34,7 @@ steps {
 
 sh 'docker rm -f ${CONT} || true'
 
-sh 'docker run -d --name ${CONT} -p 8081:80 ${IMAGE}'
+sh 'docker run -d --name ${CONT} -p 4200:80 ${IMAGE}'
 
 }
 
