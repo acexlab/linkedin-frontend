@@ -306,7 +306,7 @@ declare var google: any;
             </button>
 
             <h2 class="text-3xl font-semibold text-gray-900 mb-1">Welcome back</h2>
-            <p class="text-sm text-gray-500 mb-6">Never Ever Stay updated on your professional world</p>
+            <p class="text-sm text-gray-500 mb-6">Sankar Never Ever Stay updated on your professional world</p>
 
             @if (errorMessage()) {
               <div class="bg-red-50 border border-red-200 text-red-700 text-sm rounded px-3 py-2.5 mb-4" data-testid="text-login-error">
